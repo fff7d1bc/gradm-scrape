@@ -86,6 +86,15 @@
 #ifndef AF_TIPC
 #define AF_TIPC 30
 #endif
+#ifndef AF_BLUETOOTH
+#define AF_BLUETOOTH 31
+#endif
+#ifndef AF_IUCV
+#define AF_IUCV 32
+#endif
+#ifndef AF_RXRPC
+#define AF_RXRPC 33
+#endif
 #ifndef AF_ISDN
 #define AF_ISDN 34
 #endif
