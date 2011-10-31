@@ -296,6 +296,23 @@ void *lookup_hash_entry(struct gr_hash_struct *hash, void *entry)
 	return NULL;
 }
 
+struct file_acl *lookup_acl_object_by_inodev(struct proc_acl *subject, char *name)
+{
+	struct stat st;
+	struct file_acl obj;
+	int ret;
+	ret = stat(name, &st);
+	if (ret)
+		return NULL;
+	obj.inode = st.st_ino;
+	if (is_24_kernel)
+		obj.dev = MKDEV_24(MAJOR_24(st.st_dev), MINOR_24(st.st_dev));
+	else
+		obj.dev = MKDEV_26(MAJOR_26(st.st_dev), MINOR_26(st.st_dev));
+
+	return (struct file_acl *)lookup_hash_entry(subject->hash, (void *)&obj);
+}
+
 struct file_acl *lookup_acl_object(struct proc_acl *subject, struct file_acl *object)
 {
 	struct file_acl *obj;

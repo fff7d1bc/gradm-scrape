@@ -60,8 +60,8 @@ $(GRADM_PAM): gradm_pam.c gradm.h gradm_defs.h gradm_func.h
 		$(CC) $(CFLAGS) -o $@ gradm_pam.c -lpam -lpam_misc $(LDFLAGS) ; \
 	fi
 
-grlearn: grlearn.c gradm_lib.c grlearn2_config.tab.c lex.grlearn_config.c
-	$(CC) $(CFLAGS) -DIS_GRLEARN -o $@ grlearn.c gradm_lib.c grlearn2_config.tab.c lex.grlearn_config.c $(LIBS) $(LDFLAGS)
+grlearn: grlearn.c gradm_lib.c gradm_globals.c grlearn2_config.tab.c lex.grlearn_config.c
+	$(CC) $(CFLAGS) -DIS_GRLEARN -o $@ grlearn.c gradm_lib.c gradm_globals.c grlearn2_config.tab.c lex.grlearn_config.c $(LIBS) $(LDFLAGS)
 
 grlearn2_config.tab.c: grlearn2_config.y
 	$(YACC) -b grlearn2_config -p grlearn2_config -d ./grlearn2_config.y

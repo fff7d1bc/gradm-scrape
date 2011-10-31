@@ -19,6 +19,8 @@ check_permission(struct role_acl *role, struct proc_acl *def_acl,
 			tmpp = def_acl;
 			do {
 				tmpf = lookup_acl_object_by_name(tmpp, tmpname);
+				if (!tmpf)
+					tmpf = lookup_acl_object_by_inodev(tmpp, tmpname);
 				if (tmpf) {
 					/* check globbed objects */
 					for_each_globbed(tmpg, tmpf) {
