@@ -1,0 +1,9 @@
+To install gradm with PAM support for special roles:
+
+make
+make install
+
+To install gradm without PAM support:
+
+make nopam
+make install
