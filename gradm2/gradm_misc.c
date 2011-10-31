@@ -235,6 +235,7 @@ init_variables(void)
 	dont_reduce_dirs = NULL;
 	always_reduce_dirs = NULL;
 	protected_paths = NULL;
+	read_protected_paths = NULL;
 	high_reduce_dirs = NULL;
 	high_protected_paths = NULL;
 

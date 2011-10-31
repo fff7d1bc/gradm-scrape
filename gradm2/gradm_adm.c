@@ -235,15 +235,61 @@ static void add_fulllearn_admin_acl(void)
 	return;
 }
 
+static void add_fulllearn_shutdown_acl(void)
+{
+	struct ip_acl ip;
+
+	add_role_acl(&current_role, gr_strdup("shutdown"), role_mode_conv("sARG"), 0);
+	add_proc_subject_acl(current_role, "/", proc_subject_mode_conv("rvkao"), 0);
+
+#define ADD_OBJ(x, y) \
+		add_proc_object_acl(current_subject, (x), proc_object_mode_conv(y), GR_FEXIST)
+
+	ADD_OBJ("/", "");
+	ADD_OBJ("/dev", "");
+	ADD_OBJ("/dev/urandom", "r");
+	ADD_OBJ("/dev/random", "r");
+	ADD_OBJ("/etc", "r");
+	ADD_OBJ("/bin", "rx");
+	ADD_OBJ("/sbin", "rx");
+	ADD_OBJ("/lib", "rx");
+	ADD_OBJ("/lib64", "rx");
+	ADD_OBJ("/usr", "rx");
+	ADD_OBJ("/proc", "r");
+	ADD_OBJ("/boot", "h");
+	ADD_OBJ("/dev/grsec", "h");
+	ADD_OBJ("/dev/kmem", "h");
+	ADD_OBJ("/dev/mem", "h");
+	ADD_OBJ("/dev/port", "h");
+	ADD_OBJ("/etc/grsec", "h");
+	ADD_OBJ("/proc/kcore", "h");
+	ADD_OBJ("/proc/slabinfo", "h");
+	ADD_OBJ("/proc/modules", "h");
+	ADD_OBJ("/proc/kallsyms", "h");
+	ADD_OBJ("/lib/modules", "hs");
+	ADD_OBJ("/etc/ssh", "h");
+#undef ADD_OBJ
+	add_proc_object_acl(current_subject, "/lib64", proc_object_mode_conv("rx"), GR_FEXIST | GR_IGNOREDUPE);
+	add_cap_acl(current_subject, "-CAP_ALL", NULL);
+
+	memset(&ip, 0, sizeof (ip));
+	add_ip_acl(current_subject, GR_IP_CONNECT, &ip);
+	add_ip_acl(current_subject, GR_IP_BIND, &ip);
+
+	return;
+}
+
 void add_fulllearn_acl(void)
 {
 	struct ip_acl ip;
 
 	add_kernel_acl();
 	add_fulllearn_admin_acl();
+	add_fulllearn_shutdown_acl();
 
 	add_role_acl(&current_role, gr_strdup("default"), role_mode_conv("A"), 0);
 	add_role_transition(current_role, "admin");
+	add_role_transition(current_role, "shutdown");
 	add_proc_subject_acl(current_role, "/", proc_subject_mode_conv("ol"), 0);
 
 	add_proc_object_acl(current_subject, "/", proc_object_mode_conv("h"), GR_FEXIST);

@@ -440,18 +440,52 @@ int ensure_role_security(struct gr_learn_group_node *group,
 	return 0;
 }
 
+static char *initial_roles_str =
+"# policy generated from full system learning\n\n"
+"define grsec_denied {\n"
+"\t/boot\th\n"
+"\t/dev/grsec\th\n"
+"\t/dev/kmem\th\n"
+"\t/dev/mem\th\n"
+"\t/dev/port\th\n"
+"\t/etc/grsec\th\n"
+"\t/proc/kcore\th\n"
+"\t/proc/slabinfo\th\n"
+"\t/proc/modules\th\n"
+"\t/proc/kallsyms\th\n"
+"\t/lib/modules\ths\n"
+"\t/etc/ssh\th\n"
+"}\n\n"
+"role admin sA\n"
+"subject / rvka\n"
+"\t/ rwcdmlxi\n\n"
+"role shutdown sARG\n"
+"subject / rvka\n"
+"\t/\n"
+"\t/dev\n"
+"\t/dev/urandom r\n"
+"\t/dev/random r\n"
+"\t/etc r\n"
+"\t/bin rx\n"
+"\t/sbin rx\n"
+"\t/lib rx\n"
+"\t/lib64 rx\n"
+"\t/usr rx\n"
+"\t/proc r\n"
+"\t$grsec_denied\n"
+"\t-CAP_ALL\n"
+"\tconnect disabled\n"
+"\tbind disabled\n\n"
+"role default\n"
+"subject /\n"
+"\t/\t\t\th\n"
+"\t-CAP_ALL\n"
+"\tconnect\tdisabled\n"
+"\tbind\tdisabled\n\n";
+
 void output_learn_header(FILE *stream)
 {
-	fprintf(stream, "role admin sA\n");
-	fprintf(stream, "subject / rvka\n");
-	fprintf(stream, "\t/ rwcdmlxi\n\n");
-	fprintf(stream, "role default\n");
-	fprintf(stream, "subject / {\n");
-	fprintf(stream, "\t/\t\t\t\th\n");
-	fprintf(stream, "\t-CAP_ALL\n");
-	fprintf(stream, "\tconnect\tdisabled\n");
-	fprintf(stream, "\tbind\tdisabled\n");
-	fprintf(stream, "}\n\n");
+	fprintf(stream, initial_roles_str);
 	fflush(stream);
 
 	return;
@@ -464,7 +498,7 @@ void output_role_info(struct gr_learn_group_node *group, struct gr_learn_user_no
 	if (user) {
 		fprintf(stream, "role %s u%s\n", user->rolename, strcmp(user->rolename, "root") ? "" : "G");
 		if (!strcmp(user->rolename, "root")) {
-			fprintf(stream, "role_transitions admin\n");
+			fprintf(stream, "role_transitions admin shutdown\n");
 		}
 		allowed_ips = user->allowed_ips;
 	} else {

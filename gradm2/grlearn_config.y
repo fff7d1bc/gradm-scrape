@@ -10,6 +10,7 @@ extern int grlearn_configlex(void);
 
 %token <string> FILENAME NOLEARN INHERITLEARN INHERITNOLEARN DONTREDUCE 
 %token <string> PROTECTED HIGHPROTECTED HIGHREDUCE ALWAYSREDUCE NOALLOWEDIPS
+%token <string> READPROTECTED
 %token <num> NUM
 
 %%
@@ -53,6 +54,10 @@ learn_config:
 	|	PROTECTED FILENAME
 		{
 			add_to_string_array(&protected_paths, $2);
+		}
+	|	READPROTECTED FILENAME
+		{
+			add_to_string_array(&read_protected_paths, $2);
 		}
 	|	HIGHREDUCE FILENAME
 		{

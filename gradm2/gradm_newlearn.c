@@ -12,8 +12,42 @@ void add_grlearn_option(u_int32_t option)
 
 int is_protected_path(char *filename, u_int32_t mode)
 {
+	if (is_read_protected_path(filename, mode) ||
+	    is_write_protected_path(filename, mode))
+		return 1;
+	return 0;
+}
+
+int is_read_protected_path(char *filename, u_int32_t mode)
+{
 	char **tmp;
 	unsigned int len;
+	int is_glob;
+
+	if (!(mode & GR_READ))
+		return 0;
+
+	tmp = read_protected_paths;
+	if (tmp == NULL)
+		return 0;
+
+	while (*tmp) {
+		len = strlen(*tmp);
+		is_glob = is_globbed_file(*tmp);
+
+		if (!match_filename(filename, *tmp, len, is_glob))
+			return 1;
+		tmp++;
+	}
+
+	return 0;
+}
+
+int is_write_protected_path(char *filename, u_int32_t mode)
+{
+	char **tmp;
+	unsigned int len;
+	int is_glob;
 
 	if (!(mode & (GR_WRITE | GR_APPEND)))
 		return 0;
@@ -24,8 +58,9 @@ int is_protected_path(char *filename, u_int32_t mode)
 
 	while (*tmp) {
 		len = strlen(*tmp);
-		if (!strncmp(filename, *tmp, len) &&
-		    (filename[len] == '\0' || filename[len] == '/'))
+		is_glob = is_globbed_file(*tmp);
+
+		if (!match_filename(filename, *tmp, len, is_glob))
 			return 1;
 		tmp++;
 	}
@@ -38,6 +73,7 @@ void enforce_high_protected_paths(struct gr_learn_file_node *subject)
 	struct gr_learn_file_tmp_node **tmptable;
 	char **tmp;
 	unsigned int len;
+	int is_glob;
 	unsigned long i;
 
 	tmp = high_protected_paths;
@@ -47,14 +83,17 @@ void enforce_high_protected_paths(struct gr_learn_file_node *subject)
 	tmptable = (struct gr_learn_file_tmp_node **)subject->hash->table;
 
 	while (*tmp) {
+		is_glob = is_globbed_file(*tmp);
 		len = strlen(*tmp);
 		for (i = 0; i < subject->hash->table_size; i++) {
 			if (tmptable[i] == NULL)
 				continue;
 			if (!tmptable[i]->mode)
 				continue;
-			if (!strncmp(tmptable[i]->filename, *tmp, len) &&
-			    (tmptable[i]->filename[len] == '\0' || tmptable[i]->filename[len] == '/'))
+			/* do we want to add the globbed object regardless
+			   of whether a matching access was found or not?
+			*/
+			if (!match_filename(tmptable[i]->filename, *tmp, len, is_glob))
 				goto next;
 		}
 		cachednode = NULL;
@@ -1245,6 +1284,7 @@ void check_high_protected_path_enforcement(struct gr_learn_file_node *subject)
 	struct gr_learn_file_tmp_node **tmptable;
 	char **tmp;
 	unsigned int len;
+	int is_glob;
 	unsigned long i;
 
 	tmp = high_protected_paths;
@@ -1255,13 +1295,14 @@ void check_high_protected_path_enforcement(struct gr_learn_file_node *subject)
 
 	while (*tmp) {
 		len = strlen(*tmp);
+		is_glob = is_globbed_file(*tmp);
+
 		for (i = 0; i < subject->hash->table_size; i++) {
 			if (tmptable[i] == NULL)
 				continue;
 			if (!tmptable[i]->mode)
 				continue;
-			if (!strncmp(tmptable[i]->filename, *tmp, len) &&
-			    (tmptable[i]->filename[len] == '\0' || tmptable[i]->filename[len] == '/'))
+			if (!match_filename(filename, *tmp, len, is_glob))
 				goto next;
 		}
 		/* for all the ones that we didn't have a matching access from

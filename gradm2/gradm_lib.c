@@ -1,5 +1,24 @@
 #include "gradm.h"
 
+int is_globbed_file(char *filename)
+{
+	if (strchr(filename, '*') || strchr(filename, '?') || strchr(filename, '['))
+		return 1;
+	else
+		return 0;
+}
+
+int match_filename(char *filename, char *pattern, unsigned int len, int is_glob)
+{
+	if (is_glob)
+		return fnmatch(pattern, filename, 0);
+	else if (!strncmp(filename, pattern, len) &&
+		   (filename[len] == '\0' || filename[len] == '/'))
+		return 0;
+
+	return 1;
+}
+
 void add_to_string_array(char ***array, char *str)
 {
 	unsigned int size = 0;

@@ -48,6 +48,9 @@ FILENAME [/][^\t\n]*
 "protected-path"			{
 					  return PROTECTED;
 					}
+"read-protected-path"			{
+					  return READPROTECTED;
+					}
 "high-protected-path"			{
 					  return HIGHPROTECTED;
 					}

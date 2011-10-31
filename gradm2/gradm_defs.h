@@ -557,6 +557,7 @@ extern u_int16_t current_learn_rolemode;
 extern char **dont_reduce_dirs;
 extern char **always_reduce_dirs;
 extern char **protected_paths;
+extern char **read_protected_paths;
 extern char **high_reduce_dirs;
 extern char **high_protected_paths;
 extern u_int32_t grlearn_options;

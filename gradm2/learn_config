@@ -47,6 +47,11 @@
 #is given its own subject in the learning process, facilitating
 #a secure policy.
 #
+#read-protected-path specifies a path on your system that contains 
+#sensitive information.  Any process that reads one of these paths is
+#given its own subject in the learning process, facilitating a secure
+#policy.
+#
 #high-protected-path specifies a path that should be hidden from
 #all processes but those that access it directly.  It is recommended
 #to use highly sensitive files for this command.
@@ -115,6 +120,19 @@ protected-path /opt
 protected-path /var
 protected-path /dev/log
 protected-path /root
+
+read-protected-path /etc/ssh
+read-protected-path /proc/kallsyms
+read-protected-path /proc/kcore
+read-protected-path /proc/slabinfo
+read-protected-path /proc/modules
+read-protected-path /lib/modules
+read-protected-path /boot
+read-protected-path /etc/shadow
+read-protected-path /etc/shadow-
+read-protected-path /etc/gshadow
+read-protected-path /etc/gshadow-
+read-protected-path /sys
 
 high-protected-path /etc/ssh
 high-protected-path /proc/kcore

@@ -22,6 +22,7 @@ u_int16_t current_learn_rolemode;
 char **dont_reduce_dirs;
 char **always_reduce_dirs;
 char **protected_paths;
+char **read_protected_paths;
 char **high_reduce_dirs;
 char **high_protected_paths;
 u_int32_t grlearn_options;
