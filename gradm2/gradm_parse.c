@@ -815,7 +815,7 @@ role_mode_conv(const char *mode)
 		}
 	}
 
-	if (retmode & (GR_ROLE_SPECIAL | GR_ROLE_PERSIST) == GR_ROLE_PERSIST) {
+	if ((retmode & (GR_ROLE_SPECIAL | GR_ROLE_PERSIST)) == GR_ROLE_PERSIST) {
 		fprintf(stderr, "Error on line %lu of %s.  Persistent "
 			"roles are only valid in the context of special roles.\n"
 			"The RBAC system will not load until this error is fixed.\n", lineno, current_acl_file);
@@ -827,8 +827,8 @@ role_mode_conv(const char *mode)
 		exit(EXIT_FAILURE);
 	}
 
-	if (retmode & GR_ROLE_SPECIAL &&
-	    retmode & (GR_ROLE_USER | GR_ROLE_GROUP)) {
+	if ((retmode & GR_ROLE_SPECIAL) &&
+	    (retmode & (GR_ROLE_USER | GR_ROLE_GROUP))) {
 		fprintf(stderr, "Error on line %lu of %s.  The role mode must be either "
 				"special, or user/group, not both.\n"
 				"The RBAC system will not load until this"
