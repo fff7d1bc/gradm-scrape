@@ -3,6 +3,13 @@
 struct gr_learn_file_node **cachednode = NULL;
 unsigned int cachedlen = 0;
 
+void add_grlearn_option(u_int32_t option)
+{
+	grlearn_options |= option;
+
+	return;
+}
+
 int is_protected_path(char *filename, u_int32_t mode)
 {
 	char **tmp;

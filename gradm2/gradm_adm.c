@@ -152,20 +152,27 @@ add_gradm_pam_acl(struct role_acl *role)
 	add_proc_object_acl(current_subject, "/", proc_object_mode_conv("h"), GR_FEXIST);
 	add_proc_object_acl(current_subject, "/etc/ld.so.cache", proc_object_mode_conv("r"), GR_FEXIST);
 	add_proc_object_acl(current_subject, "/etc/ld.so.preload", proc_object_mode_conv("r"), GR_FEXIST);
+	add_proc_object_acl(current_subject, "/etc/localtime", proc_object_mode_conv("r"), GR_FEXIST);
 	add_proc_object_acl(current_subject, "/etc/protocols", proc_object_mode_conv("r"), GR_FEXIST);
 	add_proc_object_acl(current_subject, "/etc/passwd", proc_object_mode_conv("r"), GR_FEXIST);
 	add_proc_object_acl(current_subject, "/etc/shadow", proc_object_mode_conv("r"), GR_FEXIST);
 	add_proc_object_acl(current_subject, "/etc/pam.d", proc_object_mode_conv("r"), GR_FEXIST);
 	add_proc_object_acl(current_subject, "/etc/pam.conf", proc_object_mode_conv("r"), GR_FEXIST);
+	add_proc_object_acl(current_subject, "/etc/security", proc_object_mode_conv("r"), GR_FEXIST);
 	add_proc_object_acl(current_subject, "/usr/share/zoneinfo", proc_object_mode_conv("r"), GR_FEXIST);
 	add_proc_object_acl(current_subject, "/etc/nsswitch.conf", proc_object_mode_conv("r"), GR_FEXIST);
 	add_proc_object_acl(current_subject, "/dev/urandom", proc_object_mode_conv("r"), GR_FEXIST);
 	add_proc_object_acl(current_subject, "/proc", proc_object_mode_conv(""), GR_FEXIST);
+	add_proc_object_acl(current_subject, "/proc/filesystems", proc_object_mode_conv("r"), GR_FEXIST);
+	add_proc_object_acl(current_subject, "/selinux", proc_object_mode_conv("r"), GR_FEXIST);
 	add_proc_object_acl(current_subject, "/dev", proc_object_mode_conv(""), GR_FEXIST);
 	add_proc_object_acl(current_subject, "/dev/tty", proc_object_mode_conv("rw"), GR_FEXIST);
 	add_proc_object_acl(current_subject, "/dev/tty?", proc_object_mode_conv("rw"), GR_FEXIST);
 	add_proc_object_acl(current_subject, "/dev/pts", proc_object_mode_conv("rw"), GR_FEXIST);
+	add_proc_object_acl(current_subject, "/var/run", proc_object_mode_conv(""), GR_FEXIST);
 	add_proc_object_acl(current_subject, "/var/run/utmp", proc_object_mode_conv("rw"), GR_FEXIST);
+	add_proc_object_acl(current_subject, "/var/run/utmpx", proc_object_mode_conv("rw"), GR_FEXIST);
+	add_proc_object_acl(current_subject, "/var/log/faillog", proc_object_mode_conv("rw"), GR_FEXIST);
 	add_proc_object_acl(current_subject, "/dev/log", proc_object_mode_conv("rw"), GR_FEXIST);
 	add_proc_object_acl(current_subject, "/dev/null", proc_object_mode_conv("rw"), GR_FEXIST);
 	add_proc_object_acl(current_subject, "/lib", proc_object_mode_conv("rx"), GR_FEXIST);
@@ -176,6 +183,7 @@ add_gradm_pam_acl(struct role_acl *role)
 
 	add_cap_acl(current_subject, "-CAP_ALL", NULL);
 	add_cap_acl(current_subject, "+CAP_IPC_LOCK", NULL);
+	add_cap_acl(current_subject, "+CAP_AUDIT_WRITE", NULL);
 
 	return;
 }

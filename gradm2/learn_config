@@ -52,6 +52,12 @@
 #to use highly sensitive files for this command.
 #
 #regular expressions are not supported for pathnames in this config file
+#
+#
+# uncomment this next line if you don't wish to generate a policy that 
+# restricts roles to specific IP ranges:
+# dont-learn-allowed-ips
+#
 
 always-reduce-path /dev/pts
 always-reduce-path /var/spool/qmailscan/tmp

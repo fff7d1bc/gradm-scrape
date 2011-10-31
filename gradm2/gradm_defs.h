@@ -169,6 +169,10 @@ enum {
 	GR_KERNELAUTH	= 0x00020000
 };
 
+enum {
+	GR_DONT_LEARN_ALLOWED_IPS = 0x00000001
+};
+
 /* internal use only.  not to be modified */
 
 typedef struct _gr_cap_t {
@@ -480,6 +484,7 @@ extern char **always_reduce_dirs;
 extern char **protected_paths;
 extern char **high_reduce_dirs;
 extern char **high_protected_paths;
+extern u_int32_t grlearn_options;
 
 extern int gr_learn;
 

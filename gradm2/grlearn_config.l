@@ -51,6 +51,9 @@ FILENAME [/][^\t\n]*
 "high-protected-path"			{
 					  return HIGHPROTECTED;
 					}
+"dont-learn-allowed-ips"		{
+					  return NOALLOWEDIPS;
+					}
 {NUM}					{
 					  grlearn_configlval.num = atol(yytext);
 					  return NUM;

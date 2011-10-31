@@ -24,3 +24,4 @@ char **always_reduce_dirs;
 char **protected_paths;
 char **high_reduce_dirs;
 char **high_protected_paths;
+u_int32_t grlearn_options;

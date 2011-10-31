@@ -9,7 +9,7 @@ extern int grlearn_configlex(void);
 }
 
 %token <string> FILENAME NOLEARN INHERITLEARN INHERITNOLEARN DONTREDUCE 
-%token <string> PROTECTED HIGHPROTECTED HIGHREDUCE ALWAYSREDUCE
+%token <string> PROTECTED HIGHPROTECTED HIGHREDUCE ALWAYSREDUCE NOALLOWEDIPS
 %token <num> NUM
 
 %%
@@ -65,6 +65,10 @@ learn_config:
 	|	HIGHPROTECTED FILENAME
 		{
 			add_to_string_array(&high_protected_paths, $2);
+		}
+	|	NOALLOWEDIPS
+		{
+			add_grlearn_option(GR_DONT_LEARN_ALLOWED_IPS);
 		}
 	;
 %%

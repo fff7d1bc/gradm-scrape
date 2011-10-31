@@ -459,7 +459,7 @@ void output_role_info(struct gr_learn_group_node *group, struct gr_learn_user_no
 		allowed_ips = group->allowed_ips;
 	}
 
-	if (allowed_ips)
+	if (allowed_ips && !(grlearn_options & GR_DONT_LEARN_ALLOWED_IPS))
 		traverse_ip_tree(allowed_ips, NULL, &display_only_ip, 0, stream);
 
 	return;

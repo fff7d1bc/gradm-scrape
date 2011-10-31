@@ -95,6 +95,7 @@ void insert_ip(struct gr_learn_ip_node **base, u_int32_t ip, u_int16_t port, u_i
 		u_int8_t socktype);
 int is_protected_path(char *filename, u_int32_t mode);
 
+void add_grlearn_option(u_int32_t option);
 struct gr_learn_role_entry *
 insert_learn_role(struct gr_learn_role_entry ***role_list, char *rolename, u_int16_t rolemode);
 void insert_learn_object(struct gr_learn_file_node *subject, struct gr_learn_file_tmp_node *object);

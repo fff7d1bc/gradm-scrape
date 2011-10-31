@@ -14,7 +14,7 @@ extern void grlearn_configerror(const char *s);
 }
 
 %token <string> FILENAME NOLEARN INHERITLEARN INHERITNOLEARN DONTREDUCE 
-%token <string> PROTECTED HIGHPROTECTED HIGHREDUCE ALWAYSREDUCE
+%token <string> PROTECTED HIGHPROTECTED HIGHREDUCE ALWAYSREDUCE NOALLOWEDIPS
 %token <num> NUM
 
 %%
@@ -47,6 +47,9 @@ learn_config:
 			add_always_reduce($2);
 		}
 	|	HIGHPROTECTED FILENAME
+		{
+		}
+	|	NOALLOWEDIPS
 		{
 		}
 	;

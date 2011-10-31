@@ -258,7 +258,7 @@ void display_learn_logs(FILE *stream)
 			fprintf(stream, "role default G\n");
 		subjects = default_role_entry->subject_list;
 		allowed_ips = default_role_entry->allowed_ips;
-		if (allowed_ips)
+		if (allowed_ips && !(grlearn_options & GR_DONT_LEARN_ALLOWED_IPS))
 			traverse_ip_tree(allowed_ips, NULL, &display_only_ip, 0, stream);
 		if (subjects)
 			display_tree(subjects, stream);
@@ -276,7 +276,7 @@ void display_learn_logs(FILE *stream)
 		}
 		subjects = (*tmp)->subject_list;
 		allowed_ips = (*tmp)->allowed_ips;
-		if (allowed_ips)
+		if (allowed_ips && !(grlearn_options & GR_DONT_LEARN_ALLOWED_IPS))
 			traverse_ip_tree(allowed_ips, NULL, &display_only_ip, 0, stream);
 		if (subjects)
 			display_tree(subjects, stream);
@@ -295,7 +295,7 @@ void display_learn_logs(FILE *stream)
 		}
 		subjects = (*tmp)->subject_list;
 		allowed_ips = (*tmp)->allowed_ips;
-		if (allowed_ips)
+		if (allowed_ips && !(grlearn_options & GR_DONT_LEARN_ALLOWED_IPS))
 			traverse_ip_tree(allowed_ips, NULL, &display_only_ip, 0, stream);
 		if (subjects)
 			display_tree(subjects, stream);
@@ -314,7 +314,7 @@ void display_learn_logs(FILE *stream)
 		}
 		subjects = (*tmp)->subject_list;
 		allowed_ips = (*tmp)->allowed_ips;
-		if (allowed_ips)
+		if (allowed_ips && !(grlearn_options & GR_DONT_LEARN_ALLOWED_IPS))
 			traverse_ip_tree(allowed_ips, NULL, &display_only_ip, 0, stream);
 		if (subjects)
 			display_tree(subjects, stream);
