@@ -167,6 +167,9 @@ void check_acl_status(u_int16_t reqmode)
 		} else if (retval == 3) {
 			printf("The terminal you are using is unsafe.  Use another terminal.\n");
 			exit(2);
+		} else {
+			printf("The /dev/grsec device is not properly installed on your system or you are not using a grsecurity kernel.\n");
+			exit(-1);
 		}
 		break;
 	case GRADM_ENABLE:
