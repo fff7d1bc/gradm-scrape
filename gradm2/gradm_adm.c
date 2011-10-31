@@ -119,8 +119,8 @@ add_gradm_acl(struct role_acl *role)
 	add_proc_object_acl(current_subject, gradm_name, proc_object_mode_conv("x"), GR_FEXIST);
 	add_proc_object_acl(current_subject, GRPAM_PATH, proc_object_mode_conv("x"), GR_FEXIST);
 
-	add_cap_acl(current_subject, "-CAP_ALL");
-	add_cap_acl(current_subject, "+CAP_IPC_LOCK");
+	add_cap_acl(current_subject, "-CAP_ALL", NULL);
+	add_cap_acl(current_subject, "+CAP_IPC_LOCK", NULL);
 
 	return;
 }
@@ -174,8 +174,8 @@ add_gradm_pam_acl(struct role_acl *role)
 	add_proc_object_acl(current_subject, "/usr/lib64", proc_object_mode_conv("rx"), GR_FEXIST | GR_SYMLINK);
 	add_proc_object_acl(current_subject, GRPAM_PATH, proc_object_mode_conv("x"), GR_FEXIST);
 
-	add_cap_acl(current_subject, "-CAP_ALL");
-	add_cap_acl(current_subject, "+CAP_IPC_LOCK");
+	add_cap_acl(current_subject, "-CAP_ALL", NULL);
+	add_cap_acl(current_subject, "+CAP_IPC_LOCK", NULL);
 
 	return;
 }
@@ -213,7 +213,7 @@ add_grlearn_acl(struct role_acl *role)
 	add_proc_object_acl(current_subject, "/", proc_object_mode_conv("h"), GR_FEXIST);
 	add_proc_object_acl(current_subject, GRLEARN_PATH, proc_object_mode_conv("x"), GR_FEXIST);
 
-	add_cap_acl(current_subject, "-CAP_ALL");
+	add_cap_acl(current_subject, "-CAP_ALL", NULL);
 
 	return;
 }
@@ -240,7 +240,7 @@ void add_fulllearn_acl(void)
 
 	add_proc_object_acl(current_subject, "/", proc_object_mode_conv("h"), GR_FEXIST);
 
-	add_cap_acl(current_subject, "-CAP_ALL");
+	add_cap_acl(current_subject, "-CAP_ALL", NULL);
 
 	memset(&ip, 0, sizeof (ip));
 	add_ip_acl(current_subject, GR_IP_CONNECT, &ip);
@@ -262,7 +262,7 @@ void add_rolelearn_acl(void)
 
 	add_proc_object_acl(current_subject, "/", proc_object_mode_conv("h"), GR_FEXIST);
 
-	add_cap_acl(current_subject, "-CAP_ALL");
+	add_cap_acl(current_subject, "-CAP_ALL", NULL);
 
 	memset(&ip, 0, sizeof (ip));
 	add_ip_acl(current_subject, GR_IP_CONNECT, &ip);

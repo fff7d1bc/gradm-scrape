@@ -126,7 +126,7 @@ cap_conv(const char *cap)
 }
 
 void
-add_cap_acl(struct proc_acl *subject, const char *cap)
+add_cap_acl(struct proc_acl *subject, const char *cap, const char *audit)
 {
 	gr_cap_t kcap = cap_conv(cap + 1);
 
@@ -141,9 +141,21 @@ add_cap_acl(struct proc_acl *subject, const char *cap)
 	if (*cap == '+') {
 		subject->cap_drop = cap_drop(subject->cap_drop, kcap);
 		subject->cap_mask = cap_combine(subject->cap_mask, kcap);
+		if (audit && !strcmp(audit, "audit"))
+			subject->cap_invert_audit = cap_combine(subject->cap_invert_audit, kcap);
+		else if (audit) {
+			fprintf(stderr, "Error on line %lu of %s.  \"suppress\" can only be applied to denied capabilities.  The RBAC system will not load until this error is fixed.\n", lineno, current_acl_file);
+			exit(EXIT_FAILURE);
+		}
 	} else {
 		subject->cap_drop = cap_combine(subject->cap_drop, kcap);
 		subject->cap_mask = cap_combine(subject->cap_mask, kcap);
+		if (audit && !strcmp(audit, "suppress"))
+			subject->cap_invert_audit = cap_combine(subject->cap_invert_audit, kcap);
+		else if (audit) {
+			fprintf(stderr, "Error on line %lu of %s.  \"audit\" can only be applied to permitted capabilities.  The RBAC system will not load until this error is fixed.\n", lineno, current_acl_file);
+			exit(EXIT_FAILURE);
+		}
 	}
 	return;
 }

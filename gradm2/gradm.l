@@ -34,7 +34,7 @@ IP [0-9]{1,3}"."[0-9]{1,3}"."[0-9]{1,3}"."[0-9]{1,3}
 %x ROLE_STATE SUBJECT_STATE IP_STATE RES_STATE COMMENT_STATE ROLETYPE_STATE
 %x INCLUDE_STATE IPNETMASK_STATE IPPORT_STATE ROLETRANS_STATE
 %x VAR_STATE VAR_OBJ_STATE IDTRANS_STATE DOMAIN_STATE DOMAINTYPE_STATE
-%x DOMAINLIST_STATE IPIP_STATE IPONLY_STATE REP_STATE
+%x DOMAINLIST_STATE IPIP_STATE IPONLY_STATE REP_STATE CAP_STATE
 
 %%
 
@@ -312,7 +312,12 @@ IP [0-9]{1,3}"."[0-9]{1,3}"."[0-9]{1,3}"."[0-9]{1,3}
 					  *(gr_line + strlen(gr_line) - 1) = '\0';
 					  add_include(gr_line);					  
 					}
+<CAP_STATE>"audit"|"suppress"		{
+					  gradmlval.string = gr_strdup(yytext);
+					  return AUDIT;
+					}
 [+-]"CAP_"[_A-Z]+			{
+					  BEGIN(CAP_STATE);
 					  gradmlval.string = gr_strdup(yytext);
 					  return CAP_NAME;
 					}

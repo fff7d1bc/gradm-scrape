@@ -176,6 +176,11 @@
 # paths by their function, then only having to update those paths once
 # to have it affect a large number of subjects/objects.
 #
+# capability auditing / log suppression
+# use of a capability can be audited by adding "audit" to the line, eg:
+# +CAP_SYS_RAWIO audit
+# log suppression for denial of a capbility can be done by adding "suppress":
+# -CAP_SYS_RAWIO suppress
 #
 # Note that the omission of any feature of a role or subject
 # results in a default-allow

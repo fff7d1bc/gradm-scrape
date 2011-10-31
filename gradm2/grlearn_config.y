@@ -32,7 +32,7 @@ learn_config:
 			if (current_role != NULL) {
 				add_proc_subject_acl(current_role, $2, proc_subject_mode_conv("oi"), 0);
 				add_proc_object_acl(current_subject, "/", proc_object_mode_conv("h"), GR_FEXIST);
-				add_cap_acl(current_subject, "-CAP_ALL");
+				add_cap_acl(current_subject, "-CAP_ALL", NULL);
 
 				memset(&ip, 0, sizeof (ip));
 				add_ip_acl(current_subject, GR_IP_CONNECT, &ip);

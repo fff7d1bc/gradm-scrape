@@ -22,7 +22,7 @@ int current_nest_depth = 0;
 %token <string> ROLE_TRANSITION VARIABLE DEFINE DEFINE_NAME DISABLED
 %token <string> ID_NAME USER_TRANS_ALLOW GROUP_TRANS_ALLOW 
 %token <string> USER_TRANS_DENY GROUP_TRANS_DENY DOMAIN_TYPE DOMAIN
-%token <string> INTERFACE IPOVERRIDE REPLACE REP_ARG
+%token <string> INTERFACE IPOVERRIDE REPLACE REP_ARG AUDIT
 %token <num> OBJ_MODE SUBJ_MODE IPADDR IPNETMASK NOT
 %token <shortnum> IPPORT ROLE_TYPE 
 %type <num> subj_mode obj_mode ip_netmask invert_socket
@@ -250,9 +250,15 @@ object_file_label:		OBJ_NAME obj_mode
 				}
 	;
 
-object_cap_label:		CAP_NAME
+object_cap_label:		CAP_NAME AUDIT
 				{
-				 add_cap_acl(current_subject, $1);
+                                add_cap_acl(current_subject, $1, $2);
+                                free($1);
+                                free($2);
+                               }
+       |                       CAP_NAME
+                               {
+                                add_cap_acl(current_subject, $1, NULL);
 				 free($1);
 				}
 	;

@@ -12,8 +12,8 @@
 #define GR_PW_PATH 		GRSEC_DIR "/pw"
 #define GR_LEARN_CONFIG_PATH	GRSEC_DIR "/learn_config"
 
-#define GR_VERSION		"2.1.14"
-#define GRADM_VERSION		0x2114
+#define GR_VERSION		"2.2.0"
+#define GRADM_VERSION		0x2200
 
 #define GR_PWONLY		0
 #define GR_PWANDSUM		1
@@ -275,6 +275,7 @@ struct proc_acl {
 	u_int32_t mode;
 	gr_cap_t cap_mask;
 	gr_cap_t cap_drop;
+	gr_cap_t cap_invert_audit;
 
 	struct rlimit res[GR_NLIMITS];
 	u_int32_t resmask;

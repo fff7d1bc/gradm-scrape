@@ -25,7 +25,7 @@ u_int32_t proc_object_mode_conv(const char *mode);
 int add_proc_subject_acl(struct role_acl *role, char *filename, u_int32_t mode, int flag);
 int add_proc_object_acl(struct proc_acl *subject, char *filename,
 			u_int32_t mode, int type);
-void add_cap_acl(struct proc_acl *subject, const char *cap);
+void add_cap_acl(struct proc_acl *subject, const char *cap, const char *audit);
 void add_paxflag_acl(struct proc_acl *subject, const char *paxflag);
 void add_gradm_acl(struct role_acl *role);
 void add_gradm_pam_acl(struct role_acl *role);
