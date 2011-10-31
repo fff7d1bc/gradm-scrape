@@ -134,6 +134,14 @@ install: $(GRADM_BIN) gradm.8 policy grlearn
 			$(MKNOD) -m 0622 $(DESTDIR)/dev/grsec c 1 13 ; \
 		fi \
 	fi
+	@if [ -d $(DESTDIR)/etc/udev/rules.d ] ; then \
+		echo "ACTION!=\"add|change\", GOTO=\"permissions_end\"" > $(DESTDIR)/etc/udev/rules.d/80-grsec.rules ; \
+		echo "KERNEL==\"grsec\",          MODE=\"0622\"" >> $(DESTDIR)/etc/udev/rules.d/80-grsec.rules ; \
+		echo "LABEL=\"permissions_end\"" >> $(DESTDIR)/etc/udev/rules.d/80-grsec.rules ; \
+	fi
+	@if [ -f $(DESTDIR)/sbin/udevadm ] ; then \
+		$(DESTDIR)/sbin/udevadm trigger --action=change ; \
+	fi
 	@echo "Installing gradm manpage..."
 	@mkdir -p $(DESTDIR)$(MANDIR)/man8
 	@$(INSTALL) -m 0644 gradm.8 $(DESTDIR)$(MANDIR)/man8/$(GRADM_BIN).8
