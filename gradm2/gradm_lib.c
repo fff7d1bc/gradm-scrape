@@ -193,7 +193,7 @@ void resize_hash_table(struct gr_hash_struct *hash)
 	return;
 }
 
-void *lookup_name_entry(struct gr_hash_struct *hash, char *name)
+void *lookup_name_entry(struct gr_hash_struct *hash, const char *name)
 {
 	if (hash == NULL)
 		return NULL;
@@ -229,12 +229,12 @@ void *lookup_name_entry(struct gr_hash_struct *hash, char *name)
 	return NULL;
 }
 
-struct file_acl *lookup_acl_object_by_name(struct proc_acl *subject, char *name)
+struct file_acl *lookup_acl_object_by_name(struct proc_acl *subject, const char *name)
 {
 	return (struct file_acl *)lookup_name_entry(subject->hash, name);
 }
 
-struct proc_acl *lookup_acl_subject_by_name(struct role_acl *role, char *name)
+struct proc_acl *lookup_acl_subject_by_name(struct role_acl *role, const char *name)
 {
 	return (struct proc_acl *)lookup_name_entry(role->hash, name);
 }
@@ -296,7 +296,7 @@ void *lookup_hash_entry(struct gr_hash_struct *hash, void *entry)
 	return NULL;
 }
 
-struct file_acl *lookup_acl_object_by_inodev(struct proc_acl *subject, char *name)
+struct file_acl *lookup_acl_object_by_inodev(struct proc_acl *subject, const char *name)
 {
 	struct stat st;
 	struct file_acl obj;

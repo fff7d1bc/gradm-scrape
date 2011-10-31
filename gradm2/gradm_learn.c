@@ -253,7 +253,7 @@ void display_learn_logs(FILE *stream)
 			traverse_ip_tree(allowed_ips, NULL, &display_only_ip, 0, stream);
 		if (subjects) {
 			sort_file_node_list(default_role_entry->subject_list);
-			display_tree(subjects, stream);
+			display_tree_with_role(subjects, "default", stream);
 		}
 
 		fprintf(stream, "\n");
@@ -272,7 +272,7 @@ void display_learn_logs(FILE *stream)
 			traverse_ip_tree(allowed_ips, NULL, &display_only_ip, 0, stream);
 		if (subjects) {
 			sort_file_node_list(group_role_list->subject_list);
-			display_tree(subjects, stream);
+			display_tree_with_role(subjects, tmp->rolename, stream);
 		}
 
 		fprintf(stream, "\n");
@@ -291,7 +291,7 @@ void display_learn_logs(FILE *stream)
 			traverse_ip_tree(allowed_ips, NULL, &display_only_ip, 0, stream);
 		if (subjects) {
 			sort_file_node_list(user_role_list->subject_list);
-			display_tree(subjects, stream);
+			display_tree_with_role(subjects, tmp->rolename, stream);
 		}
 
 		fprintf(stream, "\n");
@@ -310,7 +310,7 @@ void display_learn_logs(FILE *stream)
 			traverse_ip_tree(allowed_ips, NULL, &display_only_ip, 0, stream);
 		if (subjects) {
 			sort_file_node_list(special_role_list->subject_list);
-			display_tree(subjects, stream);
+			display_tree_with_role(subjects, tmp->rolename, stream);
 		}
 
 		fprintf(stream, "\n");

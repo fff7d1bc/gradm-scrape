@@ -102,8 +102,7 @@ void fulllearn_pass2(FILE *stream)
 }
 
 int full_reduce_object_node(struct gr_learn_file_node *subject,
-			    struct gr_learn_file_node *unused1,
-			    FILE *unused2)
+			    void *unused1, FILE *unused2)
 {
 	struct gr_learn_file_tmp_node **tmptable;
 	unsigned long i;
@@ -149,8 +148,7 @@ int full_reduce_object_node(struct gr_learn_file_node *subject,
 }
 
 int full_reduce_ip_node(struct gr_learn_file_node *subject,
-			struct gr_learn_file_node *unused1,
-			FILE *unused2)
+			void *unused1, FILE *unused2)
 {
 	struct gr_learn_ip_node *tmp = subject->connect_list;
 
@@ -195,8 +193,7 @@ void free_subject_ids(unsigned int ***list, int thresh)
 }
 
 int full_reduce_id_node(struct gr_learn_file_node *subject,
-			struct gr_learn_file_node *unused1,
-			FILE *unused2)
+			void *unused1, FILE *unused2)
 {
 	if (subject->subject == NULL ||
 	    !cap_raised(subject->subject->cap_raise, CAP_SETUID))
@@ -373,7 +370,7 @@ void free_role_group_full(struct gr_learn_group_node *group)
 	return;
 }
 
-int fulllearn_pass3(struct gr_learn_file_node *subject, struct gr_learn_file_node *unused, FILE *stream)
+int fulllearn_pass3(struct gr_learn_file_node *subject, void *rolename, FILE *stream)
 {
 	fseek(fulllearn_pass3in, 0, SEEK_SET);
 	current_learn_subject = subject->filename;
@@ -386,7 +383,7 @@ int fulllearn_pass3(struct gr_learn_file_node *subject, struct gr_learn_file_nod
 	full_reduce_ip_node(subject, NULL, NULL);
 	full_reduce_id_node(subject, NULL, NULL);
 
-	display_leaf(subject, NULL, stream);
+	display_leaf(subject, rolename, stream);
 	free_subject_full(subject);
 
 	return 0;
@@ -407,8 +404,7 @@ void enforce_hidden_file(struct gr_learn_file_node *subject, char *filename)
 }
 
 int ensure_subject_security(struct gr_learn_file_node *subject,
-			struct gr_learn_file_node *unused1,
-			FILE *unused2)
+			void *unused1, FILE *unused2)
 {
 	if (strcmp(subject->filename, "/"))
 		return 0;
@@ -533,14 +529,14 @@ void generate_full_learned_acls(FILE *learnlog, FILE *stream)
 			current_learn_rolemode = GR_ROLE_GROUP;
 			output_role_info(group, NULL, stream);
 			sort_file_node_list(group->subject_list);
-			traverse_file_tree(group->subject_list, &fulllearn_pass3, NULL, stream);
+			traverse_file_tree(group->subject_list, &fulllearn_pass3, group->rolename, stream);
 		} else {
 			for_each_removable_list_entry(user, group->users) {
 				current_learn_rolename = user->rolename;
 				current_learn_rolemode = GR_ROLE_USER;
 				output_role_info(NULL, user, stream);
 				sort_file_node_list(user->subject_list);
-				traverse_file_tree(user->subject_list, &fulllearn_pass3, NULL, stream);
+				traverse_file_tree(user->subject_list, &fulllearn_pass3, user->rolename, stream);
 				tmpuser = user->next;
 				free_role_user_full(user);
 				user = tmpuser;

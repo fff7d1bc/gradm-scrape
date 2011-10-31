@@ -550,8 +550,8 @@ done:
 }
 
 void traverse_file_tree(struct gr_learn_file_node *base,
-		   int (*act)(struct gr_learn_file_node *node, struct gr_learn_file_node *optarg, FILE *stream),
-		   struct gr_learn_file_node *optarg, FILE *stream)
+		   int (*act)(struct gr_learn_file_node *node, void *optarg, FILE *stream),
+		   void *optarg, FILE *stream)
 {
 	struct gr_learn_file_node *node;
 
@@ -977,8 +977,7 @@ final:
    all files within it should be reduced, or if all files and subdirectories in
    it should be reduced
 */
-int second_reduce_node(struct gr_learn_file_node *node,
-		       struct gr_learn_file_node *unused1, FILE *unused)
+int second_reduce_node(struct gr_learn_file_node *node, void *unused1, FILE *unused)
 {
 	int (* retval)(struct gr_learn_file_node *node);
 
@@ -995,8 +994,7 @@ void second_stage_reduce_tree(struct gr_learn_file_node *base)
 	return traverse_file_tree(base, &second_reduce_node, NULL, NULL);
 }
 
-int third_reduce_node(struct gr_learn_file_node *node,
-		       struct gr_learn_file_node *unused1, FILE *unused)
+int third_reduce_node(struct gr_learn_file_node *node, void *unused1, FILE *unused)
 {
 	struct gr_learn_file_node *tmp;
 	int removed = 0;
@@ -1219,8 +1217,7 @@ void insert_file(struct gr_learn_file_node **base, char *filename, u_int32_t mod
    this algorithm gets called against every node/leaf in the tree
 */
 
-int first_reduce_node(struct gr_learn_file_node *node,
-		       struct gr_learn_file_node *unused1, FILE *unused)
+int first_reduce_node(struct gr_learn_file_node *node, void *unused1, FILE *unused)
 {
 	unsigned long thresh = 5;	
 	unsigned long num = count_nodes(node->leaves);
@@ -1277,6 +1274,12 @@ void display_tree(struct gr_learn_file_node *base, FILE *stream)
 	return;
 }
 
+void display_tree_with_role(struct gr_learn_file_node *base, char *rolename, FILE *stream)
+{
+	traverse_file_tree(base, &display_leaf, rolename, stream);
+	return;
+}
+
 #ifdef GRADM_DEBUG
 void check_high_protected_path_enforcement(struct gr_learn_file_node *subject)
 {
@@ -1302,7 +1305,7 @@ void check_high_protected_path_enforcement(struct gr_learn_file_node *subject)
 				continue;
 			if (!tmptable[i]->mode)
 				continue;
-			if (!match_filename(filename, *tmp, len, is_glob))
+			if (!match_filename(tmptable[i]->filename, *tmp, len, is_glob))
 				goto next;
 		}
 		/* for all the ones that we didn't have a matching access from
@@ -1385,8 +1388,7 @@ ok:
 }
 #endif
 
-int display_leaf(struct gr_learn_file_node *node,
-		       struct gr_learn_file_node *unused1, FILE *stream)
+int display_leaf(struct gr_learn_file_node *node, void *rolename, FILE *stream)
 {
 	char modes[33];
 	int i;
@@ -1404,6 +1406,8 @@ int display_leaf(struct gr_learn_file_node *node,
 		connect = node->connect_list;
 		bind = node->bind_list;
 		conv_subj_mode_to_str(node->mode, modes, sizeof(modes));
+		if (rolename)
+			fprintf(stream, "# Role: %s\n", rolename);
 		fprintf(stream, "subject %s %s {\n", node->filename, modes);
 
 		if (node->user_trans_list) {
@@ -1555,8 +1559,7 @@ show_ips:
 	return 0;
 }
 
-void traverse_ip_tree(struct gr_learn_ip_node *base,
-		   struct gr_learn_ip_node **optarg,
+void traverse_ip_tree(struct gr_learn_ip_node *base, struct gr_learn_ip_node **optarg,
 		   int (*act)(struct gr_learn_ip_node *node, struct gr_learn_ip_node **optarg, u_int8_t contype, FILE *stream),
 		   u_int8_t contype, FILE *stream)
 {

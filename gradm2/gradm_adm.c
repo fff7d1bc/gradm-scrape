@@ -1,5 +1,8 @@
 #include "gradm.h"
 
+#define ADD_OBJ(x, y) \
+		add_proc_object_acl(current_subject, (x), proc_object_mode_conv(y), GR_FEXIST)
+
 int
 is_valid_elf_binary(const char *filename)
 {
@@ -82,7 +85,7 @@ add_gradm_acl(struct role_acl *role)
 	add_proc_subject_acl(role, gradm_name, proc_subject_mode_conv("ado"), 0);
 
 	if (!stat(GRDEV_PATH, &fstat)) {
-		add_proc_object_acl(current_subject, GRDEV_PATH, proc_object_mode_conv("w"), GR_FEXIST);
+		ADD_OBJ(GRDEV_PATH, "w");
 	} else {
 		fprintf(stderr, "%s does not "
 			"exist.  Please recompile your kernel with "
@@ -105,19 +108,19 @@ add_gradm_acl(struct role_acl *role)
 	memset(&ip, 0, sizeof (ip));
 	add_ip_acl(current_subject, GR_IP_BIND, &ip);
 
-	add_proc_object_acl(current_subject, "/", proc_object_mode_conv("h"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/etc/ld.so.cache", proc_object_mode_conv("r"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/etc/ld.so.preload", proc_object_mode_conv("r"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/etc/protocols", proc_object_mode_conv("r"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/dev/urandom", proc_object_mode_conv("r"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/lib", proc_object_mode_conv("rx"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/usr/lib", proc_object_mode_conv("rx"), GR_FEXIST);
-	/* we add GR_IGNOREDUPE to ignore fatal duplicate errors if /lib64 
-	   is symlinked to /lib for whatever reason */
-	add_proc_object_acl(current_subject, "/lib64", proc_object_mode_conv("rx"), GR_FEXIST | GR_IGNOREDUPE);
-	add_proc_object_acl(current_subject, "/usr/lib64", proc_object_mode_conv("rx"), GR_FEXIST | GR_IGNOREDUPE);
-	add_proc_object_acl(current_subject, gradm_name, proc_object_mode_conv("x"), GR_FEXIST);
-	add_proc_object_acl(current_subject, GRPAM_PATH, proc_object_mode_conv("x"), GR_FEXIST);
+	ADD_OBJ("/", "h");
+	ADD_OBJ("/etc/ld.so.cache", "r");
+	ADD_OBJ("/etc/ld.so.preload", "r");
+	ADD_OBJ("/etc/protocols", "r");
+	ADD_OBJ("/dev/urandom", "r");
+	ADD_OBJ("/lib", "rx");
+	ADD_OBJ("/usr/lib", "rx");
+	ADD_OBJ("/lib32", "rx");
+	ADD_OBJ("/usr/lib32", "rx");
+	ADD_OBJ("/lib64", "rx");
+	ADD_OBJ("/usr/lib64", "rx");
+	ADD_OBJ(gradm_name, "x");
+	ADD_OBJ(GRPAM_PATH, "x");
 
 	add_cap_acl(current_subject, "-CAP_ALL", NULL);
 	add_cap_acl(current_subject, "+CAP_IPC_LOCK", NULL);
@@ -133,7 +136,7 @@ add_gradm_pam_acl(struct role_acl *role)
 
 	add_proc_subject_acl(role, GRPAM_PATH, proc_subject_mode_conv("ado"), 0);
 
-	add_proc_object_acl(current_subject, GRDEV_PATH, proc_object_mode_conv("w"), GR_FEXIST);
+	ADD_OBJ(GRDEV_PATH, "w");
 
 	proto = getprotobyname("udp");
 	if (proto == NULL) {
@@ -149,41 +152,48 @@ add_gradm_pam_acl(struct role_acl *role)
 	memset(&ip, 0, sizeof (ip));
 	add_ip_acl(current_subject, GR_IP_BIND, &ip);
 
-	add_proc_object_acl(current_subject, "/", proc_object_mode_conv("h"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/etc/ld.so.cache", proc_object_mode_conv("r"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/etc/ld.so.preload", proc_object_mode_conv("r"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/etc/localtime", proc_object_mode_conv("r"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/etc/protocols", proc_object_mode_conv("r"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/etc/passwd", proc_object_mode_conv("r"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/etc/shadow", proc_object_mode_conv("r"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/etc/pam.d", proc_object_mode_conv("r"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/etc/pam.conf", proc_object_mode_conv("r"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/etc/security", proc_object_mode_conv("r"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/usr/share/zoneinfo", proc_object_mode_conv("r"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/etc/nsswitch.conf", proc_object_mode_conv("r"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/dev/urandom", proc_object_mode_conv("r"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/proc", proc_object_mode_conv(""), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/proc/filesystems", proc_object_mode_conv("r"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/selinux", proc_object_mode_conv("r"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/dev", proc_object_mode_conv(""), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/dev/tty", proc_object_mode_conv("rw"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/dev/tty?", proc_object_mode_conv("rw"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/dev/pts", proc_object_mode_conv("rw"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/var/run", proc_object_mode_conv(""), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/var/run/utmp", proc_object_mode_conv("rw"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/var/run/utmpx", proc_object_mode_conv("rw"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/var/log/faillog", proc_object_mode_conv("rw"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/dev/log", proc_object_mode_conv("rw"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/dev/null", proc_object_mode_conv("rw"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/lib", proc_object_mode_conv("rx"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/usr/lib", proc_object_mode_conv("rx"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/lib64", proc_object_mode_conv("rx"), GR_FEXIST | GR_IGNOREDUPE);
-	add_proc_object_acl(current_subject, "/usr/lib64", proc_object_mode_conv("rx"), GR_FEXIST | GR_IGNOREDUPE);
-	add_proc_object_acl(current_subject, GRPAM_PATH, proc_object_mode_conv("x"), GR_FEXIST);
+	ADD_OBJ("/", "h");
+	ADD_OBJ("/etc/default/passwd", "r");
+	ADD_OBJ("/etc/ld.so.cache", "r");
+	ADD_OBJ("/etc/ld.so.preload", "r");
+	ADD_OBJ("/etc/localtime", "r");
+	ADD_OBJ("/etc/login.defs", "r");
+	ADD_OBJ("/etc/protocols", "r");
+	ADD_OBJ("/etc/passwd", "r");
+	ADD_OBJ("/etc/shadow", "r");
+	ADD_OBJ("/etc/pam.d", "r");
+	ADD_OBJ("/etc/pam.conf", "r");
+	ADD_OBJ("/etc/security", "r");
+	ADD_OBJ("/usr/share/zoneinfo", "r");
+	ADD_OBJ("/etc/nsswitch.conf", "r");
+	ADD_OBJ("/dev/urandom", "r");
+	ADD_OBJ("/proc", "");
+	ADD_OBJ("/proc/filesystems", "r");
+	ADD_OBJ("/selinux", "r");
+	ADD_OBJ("/dev", "");
+	ADD_OBJ("/dev/tty", "rw");
+	ADD_OBJ("/dev/tty?", "rw");
+	ADD_OBJ("/dev/pts", "rw");
+	ADD_OBJ("/var/run", "");
+	ADD_OBJ("/run", "");
+	ADD_OBJ("/var/run/utmp", "rw");
+	ADD_OBJ("/var/run/utmpx", "rw");
+	ADD_OBJ("/var/log/faillog", "rw");
+	ADD_OBJ("/dev/log", "rw");
+	ADD_OBJ("/dev/null", "rw");
+	ADD_OBJ("/lib", "rx");
+	ADD_OBJ("/usr/lib", "rx");
+	ADD_OBJ("/lib32", "rx");
+	ADD_OBJ("/usr/lib32", "rx");
+	ADD_OBJ("/lib64", "rx");
+	ADD_OBJ("/usr/lib64", "rx");
+	ADD_OBJ(GRPAM_PATH, "x");
 
 	add_cap_acl(current_subject, "-CAP_ALL", NULL);
 	add_cap_acl(current_subject, "+CAP_IPC_LOCK", NULL);
 	add_cap_acl(current_subject, "+CAP_AUDIT_WRITE", NULL);
+
+	add_sock_family(current_subject, "netlink");
 
 	return;
 }
@@ -195,8 +205,8 @@ add_kernel_acl(void)
 
 	add_proc_subject_acl(current_role, "/", proc_subject_mode_conv("kvo"), 0);
 
-	add_proc_object_acl(current_subject, "/", proc_object_mode_conv("rwxcdl"), GR_FEXIST);
-	add_proc_object_acl(current_subject, GRSEC_DIR, proc_object_mode_conv("h"), GR_FEXIST);
+	ADD_OBJ("/", "rwxcdl");
+	ADD_OBJ(GRSEC_DIR, "h");
 
 	return;
 }
@@ -218,8 +228,8 @@ add_grlearn_acl(struct role_acl *role)
 	add_ip_acl(current_subject, GR_IP_CONNECT, &ip);
 	add_ip_acl(current_subject, GR_IP_BIND, &ip);
 
-	add_proc_object_acl(current_subject, "/", proc_object_mode_conv("h"), GR_FEXIST);
-	add_proc_object_acl(current_subject, GRLEARN_PATH, proc_object_mode_conv("x"), GR_FEXIST);
+	ADD_OBJ("/", "h");
+	ADD_OBJ(GRLEARN_PATH, "x");
 
 	add_cap_acl(current_subject, "-CAP_ALL", NULL);
 
@@ -230,7 +240,7 @@ static void add_fulllearn_admin_acl(void)
 {
 	add_role_acl(&current_role, gr_strdup("admin"), role_mode_conv("sA"), 0);
 	add_proc_subject_acl(current_role, "/", proc_subject_mode_conv("aorvk"), 0);
-	add_proc_object_acl(current_subject, "/", proc_object_mode_conv("rwcdmlxi"), GR_FEXIST);
+	ADD_OBJ("/", "rwcdmlxi");
 
 	return;
 }
@@ -242,9 +252,6 @@ static void add_fulllearn_shutdown_acl(void)
 	add_role_acl(&current_role, gr_strdup("shutdown"), role_mode_conv("sARG"), 0);
 	add_proc_subject_acl(current_role, "/", proc_subject_mode_conv("rvkao"), 0);
 
-#define ADD_OBJ(x, y) \
-		add_proc_object_acl(current_subject, (x), proc_object_mode_conv(y), GR_FEXIST)
-
 	ADD_OBJ("/", "");
 	ADD_OBJ("/dev", "");
 	ADD_OBJ("/dev/urandom", "r");
@@ -253,6 +260,7 @@ static void add_fulllearn_shutdown_acl(void)
 	ADD_OBJ("/bin", "rx");
 	ADD_OBJ("/sbin", "rx");
 	ADD_OBJ("/lib", "rx");
+	ADD_OBJ("/lib32", "rx");
 	ADD_OBJ("/lib64", "rx");
 	ADD_OBJ("/usr", "rx");
 	ADD_OBJ("/proc", "r");
@@ -268,8 +276,6 @@ static void add_fulllearn_shutdown_acl(void)
 	ADD_OBJ("/proc/kallsyms", "h");
 	ADD_OBJ("/lib/modules", "hs");
 	ADD_OBJ("/etc/ssh", "h");
-#undef ADD_OBJ
-	add_proc_object_acl(current_subject, "/lib64", proc_object_mode_conv("rx"), GR_FEXIST | GR_IGNOREDUPE);
 	add_cap_acl(current_subject, "-CAP_ALL", NULL);
 
 	memset(&ip, 0, sizeof (ip));
@@ -292,7 +298,7 @@ void add_fulllearn_acl(void)
 	add_role_transition(current_role, "shutdown");
 	add_proc_subject_acl(current_role, "/", proc_subject_mode_conv("ol"), 0);
 
-	add_proc_object_acl(current_subject, "/", proc_object_mode_conv("h"), GR_FEXIST);
+	ADD_OBJ("/", "h");
 
 	add_cap_acl(current_subject, "-CAP_ALL", NULL);
 
@@ -314,7 +320,7 @@ void add_rolelearn_acl(void)
 
 	add_proc_subject_acl(current_role, "/", proc_subject_mode_conv("ol"), 0);
 
-	add_proc_object_acl(current_subject, "/", proc_object_mode_conv("h"), GR_FEXIST);
+	ADD_OBJ("/", "h");
 
 	add_cap_acl(current_subject, "-CAP_ALL", NULL);
 

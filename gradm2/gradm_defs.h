@@ -29,8 +29,6 @@
 #define GR_FEXIST		0x1
 #define GR_FFAKE		0x2
 #define GR_FLEARN		0x4
-#define GR_SYMLINK		0x8
-#define GR_IGNOREDUPE		0x10
 
 #define CHK_FILE		0
 #define CHK_CAP			1
@@ -197,7 +195,8 @@ enum {
 	GR_ROLE_TPE 	= 0x0100,
 	GR_ROLE_DOMAIN 	= 0x0200,
 	GR_ROLE_PAM 	= 0x0400,
-	GR_ROLE_PERSIST = 0x0800
+	GR_ROLE_PERSIST = 0x0800,
+	GR_ROLE_ISID	= 0x1000
 };
 
 enum {
@@ -476,6 +475,39 @@ struct deleted_file {
 	ino_t ino;
 	struct deleted_file *next;
 };
+
+/* to keep track of symlinks, for processing after all other objects have
+   been added
+*/
+
+struct symlink {
+	struct role_acl *role;
+	struct file_acl *obj;
+	struct proc_acl *subj;
+	char *policy_file;
+	unsigned long lineno;
+	struct symlink *next;
+};
+
+/* to keep track of globbed files, so that the ordering of their anchor
+   doesn't matter
+*/
+
+struct glob_file {
+	struct role_acl *role;
+	struct proc_acl *subj;
+	char *filename;
+	u_int32_t mode;
+	int type;
+	char *policy_file;
+	unsigned long lineno;
+	struct glob_file *next;
+};
+
+extern struct glob_file *glob_files_head;
+extern struct glob_file *glob_files_tail;
+
+extern struct symlink *symlinks;
 
 extern struct deleted_file *deleted_files;
 

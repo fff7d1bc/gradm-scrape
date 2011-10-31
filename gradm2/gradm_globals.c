@@ -1,5 +1,8 @@
 #include "gradm.h"
 
+struct glob_file *glob_files_head;
+struct glob_file *glob_files_tail;
+struct symlink *symlinks;
 struct deleted_file *deleted_files;
 struct role_acl *current_role;
 struct proc_acl *current_subject;

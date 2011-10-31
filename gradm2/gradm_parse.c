@@ -3,7 +3,7 @@
 extern FILE *gradmin;
 extern int gradmparse(void);
 
-static int get_id_from_role_name(char *rolename, u_int16_t type)
+static int get_id_from_role_name(const char *rolename, u_int16_t type)
 {
 	unsigned long the_id = 0;
 	struct passwd *pwd;
@@ -118,10 +118,23 @@ static int
 is_role_dupe(struct role_acl *role, const char *rolename, const u_int16_t type)
 {
 	struct role_acl *tmp;
+	int id;
+	int i;
 
-	for_each_role(tmp, role)
-	    if ((tmp->roletype & (GR_ROLE_USER | GR_ROLE_GROUP | GR_ROLE_SPECIAL) & type) && !strcmp(tmp->rolename, rolename))
-		return 1;
+	if ((type & GR_ROLE_ISID) || ((type & (GR_ROLE_USER | GR_ROLE_GROUP)) && !(type & GR_ROLE_DOMAIN))) {
+		id = get_id_from_role_name(rolename, type);
+	}
+
+	for_each_role(tmp, role) {
+		if ((tmp->roletype & (GR_ROLE_USER | GR_ROLE_GROUP | GR_ROLE_SPECIAL) & type) && !strcmp(tmp->rolename, rolename))
+			return 1;
+		if ((tmp->roletype & GR_ROLE_DOMAIN) && (type & (GR_ROLE_USER | GR_ROLE_GROUP))) {
+			for (i = 0; i < tmp->domain_child_num; i++) {
+				if (tmp->domain_children[i] == id)
+					return 1;
+			}
+	    	}
+	}
 
 	return 0;
 }
@@ -135,7 +148,7 @@ add_domain_child(struct role_acl *role, char *idname)
 		exit(EXIT_FAILURE);
 	}
 
-	if (is_role_dupe(current_role, idname, role->roletype)) {
+	if (is_role_dupe(current_role, idname, role->roletype | GR_ROLE_ISID)) {
 		fprintf(stderr, "Duplicate role %s on line %lu of %s.\n"
 			"The RBAC system will not be allowed to be "
 			"enabled until this error is fixed.\n",
@@ -190,17 +203,33 @@ add_role_transition(struct role_acl *role, char *rolename)
 	return;
 }
 
+void add_symlink(struct proc_acl *subj, struct file_acl *obj)
+{
+	struct symlink *sym = malloc(sizeof (struct symlink));
+	if (!sym)
+		failure("malloc");
+
+	sym->role = current_role;
+	sym->subj = subj;
+	sym->obj = obj;
+	sym->policy_file = current_acl_file;
+	sym->lineno = lineno;
+
+	sym->next = symlinks;
+	symlinks = sym;
+
+	return;
+}
+
 static struct deleted_file *
 is_deleted_file_dupe(const char *filename)
 {
 	struct deleted_file *tmp;
 
-	tmp = deleted_files;
-
-	do {
+	for (tmp = deleted_files; tmp; tmp = tmp->next) {
 		if (!strcmp(filename, tmp->filename))
 			return tmp;
-	} while ((tmp = tmp->next));
+	}
 
 	return NULL;
 }
@@ -214,25 +243,16 @@ add_deleted_file(char *filename)
 
 	ino++;
 
-	if (!deleted_files) {
-		deleted_files = malloc(sizeof (struct deleted_file));
-		if (!deleted_files)
-			failure("malloc");
-		deleted_files->filename = filename;
-		deleted_files->ino = ino;
-		deleted_files->next = NULL;
-	} else {
-		retfile = is_deleted_file_dupe(filename);
-		if (retfile)
-			return retfile;
-		dfile = malloc(sizeof (struct deleted_file));
-		if (!dfile)
-			failure("malloc");
-		dfile->filename = filename;
-		dfile->ino = ino;
-		dfile->next = deleted_files;
-		deleted_files = dfile;
-	}
+	retfile = is_deleted_file_dupe(filename);
+	if (retfile)
+		return retfile;
+	dfile = malloc(sizeof (struct deleted_file));
+	if (!dfile)
+		failure("malloc");
+	dfile->filename = filename;
+	dfile->ino = ++ino;
+	dfile->next = deleted_files;
+	deleted_files = dfile;
 
 	return deleted_files;
 }
@@ -364,6 +384,35 @@ static int
 add_globbing_file(struct proc_acl *subject, char *filename,
 		  u_int32_t mode, int type)
 {
+	struct glob_file *glob = malloc(sizeof (struct glob_file));
+	if (!glob)
+		failure("malloc");
+
+	glob->role = current_role;
+	glob->subj = subject;
+	glob->filename = filename;
+	glob->mode = mode;
+	glob->type = type;
+	glob->policy_file = current_acl_file;
+	glob->lineno = lineno;
+	glob->next = NULL;
+
+	
+	if (!glob_files_head) {
+		glob_files_head = glob;
+	} else {
+		glob_files_tail->next = glob;
+	}
+
+	glob_files_tail = glob;
+
+	return 1;
+}
+
+int
+add_globbed_object_acl(struct proc_acl *subject, char *filename,
+		  u_int32_t mode, int type, char *policy_file, unsigned long line)
+{
 	char *basepoint = gr_strdup(filename);
 	char *p, *p2;
 	struct file_acl *anchor;
@@ -395,8 +444,9 @@ add_globbing_file(struct proc_acl *subject, char *filename,
 
 	if (!anchor) {
 		fprintf(stderr, "Error on line %lu of %s:\n"
-			"Object %s needs to be specified before globbed object %s\n",
-			lineno, current_acl_file, basepoint, filename);
+			"Object %s needs to be specified in the same subject as globbed object %s.\n"
+			"The RBAC system will not be allowed to be enabled until this error is corrected.\n\n",
+			line, policy_file, basepoint, filename);
 		exit(EXIT_FAILURE);
 	}
 
@@ -569,53 +619,18 @@ add_proc_object_acl(struct proc_acl *subject, char *filename,
 
 	file_len++;
 
-	num_objects++;
-	/* one for the object, one for the filename, one for the name entry struct, and one for the inodev_entry struct in the kernel*/
-	num_pointers += 4;
+	memset(&fstat, 0, sizeof(fstat));
 
 	if (lstat64(filename, &fstat)) {
-		/* don't add object for dangling symlink */
-		if (type & GR_SYMLINK) {
-			num_objects--;
-			num_pointers -= 4;
-			return 1;
-		}
 		dfile = add_deleted_file(filename);
 		fstat.st_ino = dfile->ino;
 		fstat.st_dev = 0;
 		mode |= GR_DELETED;
-		link_count = 0;
-	} else if (S_ISLNK(fstat.st_mode)) {
-		if (link_count > MAX_SYMLINK_DEPTH) {
-			fprintf(stderr, "Error: Too many levels of symbolic links when accessing "
-					"%s\n", filename);
-			exit(EXIT_FAILURE);
-		} else {
-			char buf[PATH_MAX];
-			memset(&buf, 0, sizeof (buf));
-
-			if (!(type & GR_SYMLINK))
-				symlink_uid = fstat.st_uid;
-
-			if (!realpath(filename, buf)) {
-				fprintf(stderr, "Error determining real path for %s\n", filename);
-				exit(EXIT_FAILURE);
-			}
-			link_count++;
-			if(!add_proc_object_acl(subject, gr_strdup(buf), mode, type | GR_IGNOREDUPE | GR_SYMLINK))
-				return 0;
-		}
-	} else if ((type & GR_SYMLINK) && (fstat.st_uid != symlink_uid)) {
-		/* don't add symlink target if the owner of the symlink !=
-		   the owner of the target
-		*/
-		link_count = 0;
-		num_objects--;
-		num_pointers -= 4;
-		return 1;
-	} else {
-		link_count = 0;
 	}
+
+	num_objects++;
+	/* one for the object, one for the filename, one for the name entry struct, and one for the inodev_entry struct in the kernel*/
+	num_pointers += 4;
 
 	if ((p =
 	     (struct file_acl *) calloc(1, sizeof (struct file_acl))) == NULL)
@@ -652,7 +667,7 @@ add_proc_object_acl(struct proc_acl *subject, char *filename,
 			return 1;
 		}
 	} else if ((p2 = is_proc_object_dupe(subject, p))) {
-		if ((type & GR_IGNOREDUPE) || (p2->mode == p->mode))
+		if (p2->mode == p->mode)
 			return 1;
 		fprintf(stderr, "Duplicate object found for \"%s\""
 			" in role %s, subject %s, on line %lu of %s.\n"
@@ -667,6 +682,10 @@ add_proc_object_acl(struct proc_acl *subject, char *filename,
 	}
 
 	insert_acl_object(subject, p);
+
+	if (S_ISLNK(fstat.st_mode)) {
+		add_symlink(subject, p);
+	}
 
 	return 1;
 }
@@ -710,6 +729,7 @@ add_proc_subject_acl(struct role_acl *role, char *filename, u_int32_t mode, int 
 
 	file_len = strlen(filename) + 1;
 
+	// FIXME: for subjects we currently follow symlinks
 	if (stat(filename, &fstat)) {
 		dfile = add_deleted_file(filename);
 		fstat.st_ino = dfile->ino;

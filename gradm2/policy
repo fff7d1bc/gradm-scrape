@@ -240,6 +240,7 @@ define grsec_denied {
 	/proc/kallsyms	h
 	# hide and suppress logs about accessing this path
 	/lib/modules	hs
+	/lib32/modules	hs
 	/lib64/modules	hs
 	/etc/ssh	h
 }
@@ -256,6 +257,7 @@ subject / rvka
 	/bin		rx
 	/sbin		rx
 	/lib		rx
+	/lib32		rx
 	/lib64		rx
 	/usr		rx
 	/proc r
@@ -304,6 +306,7 @@ subject /
 	/bin		rx
 	/sbin		rx
 	/lib		rx
+	/lib32		rx
 	/lib64		rx
 	/usr		rx
 # compilation of kernel code should be done within the admin role	
@@ -339,6 +342,7 @@ subject /
 	-CAP_SYS_CHROOT
 	-CAP_SYS_BOOT
 	-CAP_SETFCAP
+	-CAP_SYSLOG
 
 #	RES_AS 100M 100M
 
@@ -368,6 +372,7 @@ subject /usr/sbin/sshd dpo
 	/home
 	/home/*/.ssh/authorized_keys r
 	/lib		rx
+	/lib32		rx
 	/lib64		rx
 	/root
 	/proc		r
@@ -377,6 +382,7 @@ subject /usr/sbin/sshd dpo
 	/proc/sys/kernel/ngroups_max r
 	/selinux	r
 	/usr/lib	rx
+	/usr/lib32	rx
 	/usr/lib64	rx
 	/usr/share/zoneinfo r
 	/var/log
@@ -384,6 +390,7 @@ subject /usr/sbin/sshd dpo
 	/var/log/lastlog	rw
 	/var/log/wtmp		w
 	/var/run
+	/run
 	/var/run/sshd
 	/var/run/utmp		rw
 	/var/run/utmpx		rw

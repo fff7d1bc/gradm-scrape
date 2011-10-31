@@ -30,6 +30,10 @@ void add_paxflag_acl(struct proc_acl *subject, const char *paxflag);
 void add_gradm_acl(struct role_acl *role);
 void add_gradm_pam_acl(struct role_acl *role);
 void add_grlearn_acl(struct role_acl *role);
+int add_globbed_object_acl(struct proc_acl *subject, char *filename,
+                  u_int32_t mode, int type, char *policy_file, unsigned long line);
+struct file_acl *get_exact_matching_object(struct proc_acl *subject, const char *filename);
+struct file_acl *get_matching_object(struct proc_acl *subject, const char *filename);
 void add_domain_child(struct role_acl *role, char *idname);
 void change_current_acl_file(const char *filename);
 struct gr_arg_wrapper *conv_user_to_kernel(struct gr_pw_entry *entry);
@@ -85,8 +89,8 @@ void traverse_roles(struct gr_learn_group_node *grouplist,
 		int (*act)(struct gr_learn_group_node *group, struct gr_learn_user_node *user, FILE *stream),
 		FILE *stream);
 void traverse_file_tree(struct gr_learn_file_node *base,
-		int (*act)(struct gr_learn_file_node *node, struct gr_learn_file_node *optarg, FILE *stream),
-		struct gr_learn_file_node *optarg, FILE *stream);
+		int (*act)(struct gr_learn_file_node *node, void *optarg, FILE *stream),
+		void *optarg, FILE *stream);
 void reduce_ip_tree(struct gr_learn_ip_node *base);
 void reduce_ports_tree(struct gr_learn_ip_node *base);
 void display_roles(struct gr_learn_group_node *grouplist, FILE *stream);
@@ -109,12 +113,12 @@ void insert_learn_user_subject(struct gr_learn_user_node *role, struct gr_learn_
 struct gr_learn_role_entry *
 find_learn_role(struct gr_learn_role_entry *role_list, char *rolename);
 int full_reduce_object_node(struct gr_learn_file_node *subject,
-			    struct gr_learn_file_node *unused1,
+			    void *unused1,
 			    FILE *unused2);
 void
 conv_role_mode_to_str(u_int16_t mode, char *modestr, unsigned short len);
 int full_reduce_ip_node(struct gr_learn_file_node *subject,
-			struct gr_learn_file_node *unused1,
+			void *unused1,
 			FILE *unused2);
 void display_ip_tree(struct gr_learn_ip_node *base, u_int8_t contype, FILE *stream);
 int display_only_ip(struct gr_learn_ip_node *node, struct gr_learn_ip_node **unused, u_int8_t unused2,
@@ -124,17 +128,18 @@ void traverse_ip_tree(struct gr_learn_ip_node *base,
 			int (*act)(struct gr_learn_ip_node *node, struct gr_learn_ip_node **optarg, u_int8_t contype, FILE *stream),
 			u_int8_t contype, FILE *stream);
 void display_tree(struct gr_learn_file_node *base, FILE *stream);
+void display_tree_with_role(struct gr_learn_file_node *base, char *rolename, FILE *stream);
 void enforce_high_protected_paths(struct gr_learn_file_node *subject);
 void insert_user(struct gr_learn_group_node **grouplist, char *username, char *groupname, uid_t uid, gid_t gid);
 void add_rolelearn_acl(void);
 int ensure_subject_security(struct gr_learn_file_node *subject,
-			struct gr_learn_file_node *unused1,
+			void *unused1,
 			FILE *unused2);
 
 void check_acl_status(u_int16_t reqmode);
-struct file_acl *lookup_acl_object_by_name(struct proc_acl *subject, char *name);
-struct file_acl *lookup_acl_object_by_inodev(struct proc_acl *subject, char *name);
-struct proc_acl *lookup_acl_subject_by_name(struct role_acl *role, char *name);
+struct file_acl *lookup_acl_object_by_name(struct proc_acl *subject, const char *name);
+struct file_acl *lookup_acl_object_by_inodev(struct proc_acl *subject, const char *name);
+struct proc_acl *lookup_acl_subject_by_name(struct role_acl *role, const char *name);
 struct file_acl *lookup_acl_object(struct proc_acl *subject, struct file_acl *object);
 struct proc_acl *lookup_acl_subject(struct role_acl *role, struct proc_acl *subject);
 
@@ -156,7 +161,7 @@ char *gr_get_group_name(gid_t gid);
 void output_role_info(struct gr_learn_group_node *group, struct gr_learn_user_node *user, FILE *stream);
 void output_learn_header(FILE *stream);
 
-int display_leaf(struct gr_learn_file_node *node, struct gr_learn_file_node *unused1, FILE *stream);
+int display_leaf(struct gr_learn_file_node *node, void *unused1, FILE *stream);
 
 void insert_learn_id_transition(unsigned int ***list, int real, int eff, int fs);
 void add_to_string_array(char ***array, char *str);

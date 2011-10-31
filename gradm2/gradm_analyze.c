@@ -1,51 +1,95 @@
 #include "gradm.h"
 
+struct file_acl *get_exact_matching_object(struct proc_acl *subject, const char *filename)
+{
+	struct file_acl *tmpf = NULL;
+	struct proc_acl *tmpp = subject;
+	struct file_acl *tmpg = NULL;
+	char *tmpname = alloca(strlen(filename) + 1);
+	int reduced_dir = 0;
+	strcpy(tmpname, filename);
+
+	do {
+		tmpp = subject;
+		do {
+			tmpf = lookup_acl_object_by_name(tmpp, filename);
+			if (!tmpf)
+				tmpf = lookup_acl_object_by_inodev(tmpp, filename);
+			if (tmpf) {
+				/* check globbed objects */
+				for_each_globbed(tmpg, tmpf) {
+					if (!fnmatch(tmpg->filename, filename, 0))
+						return tmpg;
+				}
+				if (!reduced_dir)
+					return tmpf;
+			}
+		} while ((tmpp = tmpp->parent_subject));
+		reduced_dir = 1;
+	} while (parent_dir(filename, &tmpname));
+
+	// won't get here
+	return NULL;
+}
+
+static struct file_acl *get_a_matching_object(struct proc_acl *subject, const char *filename)
+{
+	struct file_acl *tmpf, *tmpg;
+	struct proc_acl *tmpp = subject;
+	do {
+		tmpf = lookup_acl_object_by_name(tmpp, filename);
+		if (!tmpf)
+			tmpf = lookup_acl_object_by_inodev(tmpp, filename);
+		if (tmpf) {
+			/* check globbed objects */
+			for_each_globbed(tmpg, tmpf) {
+				if (!fnmatch(tmpg->filename, filename, 0))
+					return tmpg;
+			}
+			return tmpf;
+		}
+	} while ((tmpp = tmpp->parent_subject));
+
+	return NULL;
+}
+
+struct file_acl *get_matching_object(struct proc_acl *subject, const char *filename)
+{
+	struct file_acl *tmpf = NULL;
+	struct file_acl *tmpg = NULL;
+	char *tmpname = alloca(strlen(filename) + 1);
+
+	strcpy(tmpname, filename);
+
+	do {
+		tmpf = get_a_matching_object(subject, tmpname);
+		if (tmpf)
+			return tmpf;
+	} while (parent_dir(filename, &tmpname));
+
+	// won't get here
+	return NULL;
+}
+
 static int
 check_permission(struct role_acl *role, struct proc_acl *def_acl,
 		 const char *filename, struct chk_perm *chk)
 {
 	struct file_acl *tmpf = NULL;
 	struct proc_acl *tmpp = def_acl;
-	struct file_acl *tmpg = NULL;
-	char *tmpname;
 	gr_cap_t cap_drp = {{ 0, 0 }}, cap_mask = {{ 0, 0 }};
 	gr_cap_t cap_full = {{ ~0, ~0 }};
 
 	if (chk->type == CHK_FILE) {
-		tmpname = alloca(strlen(filename) + 1);
-		strcpy(tmpname, filename);
-
-		do {
-			tmpp = def_acl;
-			do {
-				tmpf = lookup_acl_object_by_name(tmpp, tmpname);
-				if (!tmpf)
-					tmpf = lookup_acl_object_by_inodev(tmpp, tmpname);
-				if (tmpf) {
-					/* check globbed objects */
-					for_each_globbed(tmpg, tmpf) {
-						if (!fnmatch(tmpg->filename, filename, 0)) {
-							if (((chk->w_modes == 0xffff)
-							     || (tmpg->mode & chk->w_modes))
-							    && ((chk->u_modes == 0xffff)
-								|| !(tmpg->mode & chk->u_modes))) {
-								return 1;
-							} else {
-								return 0;
-							}
-						}
-					}
-					if (((chk->w_modes == 0xffff)
-					     || (tmpf->mode & chk->w_modes))
-					    && ((chk->u_modes == 0xffff)
-						|| !(tmpf->mode & chk->u_modes))) {
-						return 1;
-					} else {
-						return 0;
-					}
-				}
-			} while ((tmpp = tmpp->parent_subject));
-		} while (parent_dir(filename, &tmpname));
+		tmpf = get_matching_object(def_acl, filename);
+		if (((chk->w_modes == 0xffff)
+		     || (tmpf->mode & chk->w_modes))
+		     && ((chk->u_modes == 0xffff)
+		     || !(tmpf->mode & chk->u_modes))) {
+			return 1;
+		} else {
+			return 0;
+		}
 	} else if (chk->type == CHK_CAP) {
 		cap_mask = tmpp->cap_mask;
 		cap_drp = tmpp->cap_drop;
@@ -64,6 +108,41 @@ check_permission(struct role_acl *role, struct proc_acl *def_acl,
 	}
 
 	return 0;
+}
+
+static void
+insert_globbed_objects(void)
+{
+	struct glob_file *glob;
+
+	for (glob = glob_files_head; glob; glob = glob->next) {
+		add_globbed_object_acl(glob->subj, glob->filename, glob->mode, glob->type, glob->policy_file, glob->lineno);
+	}
+
+	return;
+}
+
+static void
+check_symlinks(void)
+{
+	struct symlink *sym;
+	struct file_acl *tmpf;
+
+	for (sym = symlinks; sym; sym = sym->next) {
+		char buf[PATH_MAX];
+		memset(&buf, 0, sizeof (buf));
+
+		if (!realpath(sym->obj->filename, buf))
+			continue;
+
+		tmpf = get_exact_matching_object(sym->subj, buf);
+		if (tmpf == NULL) {
+			fprintf(stdout, "Warning: object does not exist in role %s, subject %s for the target of the symlink object %s specified on line %lu of %s.\n",
+				sym->role->rolename, sym->subj->filename, sym->obj->filename, sym->lineno, sym->policy_file);
+		}
+	}
+
+	return;
 }
 
 static int
@@ -468,6 +547,8 @@ analyze_acls(void)
 	struct stat fstat;
 	gr_cap_t cap_full = {{ ~0, ~0 }};
 
+	insert_globbed_objects();
+
 	errs_found = check_role_transitions();
 
 	for_each_role(role, current_role)
@@ -668,6 +749,22 @@ analyze_acls(void)
 			errs_found++;
 		}
 
+		if (!stat("/lib32", &fstat) && !check_permission(role, def_acl, "/lib32", &chk)) {
+			fprintf(stderr,
+				"Write access is allowed by role %s to /lib32, a directory which "
+				"holds system libraries.\n\n",
+				role->rolename);
+			errs_found++;
+		}
+
+		if (!stat("/usr/lib32", &fstat) && !check_permission(role, def_acl, "/usr/lib32", &chk)) {
+			fprintf(stderr,
+				"Write access is allowed by role %s to /usr/lib32, a directory which "
+				"holds system libraries.\n\n", role->rolename);
+			errs_found++;
+		}
+
+
 		if (!stat("/lib64", &fstat) && !check_permission(role, def_acl, "/lib64", &chk)) {
 			fprintf(stderr,
 				"Write access is allowed by role %s to /lib64, a directory which "
@@ -744,6 +841,18 @@ analyze_acls(void)
 			errs_found++;
 		}
 
+		if (!stat("/lib32/modules", &fstat) && !check_permission(role, def_acl, "/lib32/modules", &chk)) {
+			fprintf(stderr,
+				"Reading access is allowed by role %s to "
+				"/lib32/modules, the directory which holds kernel "
+				"kernel modules.  The ability to read these "
+				"images provides an attacker with very "
+				"useful information for launching \"ret-to-libc\" "
+				"style attacks against the kernel"
+				".\n\n", role->rolename);
+			errs_found++;
+		}
+
 		if (!stat("/lib64/modules", &fstat) && !check_permission(role, def_acl, "/lib64/modules", &chk)) {
 			fprintf(stderr,
 				"Reading access is allowed by role %s to "
@@ -794,6 +903,16 @@ analyze_acls(void)
 			errs_found++;
 		}
 
+		chk.u_caps = cap_conv("CAP_SYSLOG");
+		chk.w_caps = cap_full;
+
+		if (!check_permission(role, def_acl, "", &chk)) {
+			fprintf(stderr, "CAP_SYSLOG is not "
+				"removed in role %s.  This would allow an "
+				"attacker to view OOPs messages in dmesg that contain addresses useful for kernel exploitation.\n\n",
+				role->rolename);
+			errs_found++;
+		}
 
 		chk.u_caps = cap_conv("CAP_SYS_BOOT");
 		chk.w_caps = cap_full;
@@ -861,6 +980,8 @@ analyze_acls(void)
 	/* end of per-role checks */
 
 	errs_found += handle_notrojan_mode();
+
+	check_symlinks();
 
 	if (errs_found) {
 		printf("There were %d holes found in your RBAC "
