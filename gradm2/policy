@@ -139,7 +139,7 @@
 # any other socket families to be used.  Starting with v2.2.1 of the 
 # RBAC system, when connect/bind rules are used, additional rules
 # will be required to unlock the use of additional socket families 
-# (outside of the common unix/local family).  Multiple families can be
+# (outside of the common unix family).  Multiple families can be
 # specified per line.
 # To enable use of IPv6, add the line:
 # sock_allow_family ipv6

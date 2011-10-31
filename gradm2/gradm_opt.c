@@ -32,12 +32,11 @@ expand_acls(void)
 			/* set up the socket families
 			   if proc->ips != NULL, then some connect/bind
 			   rules were specified
-			   we default to allowing unix/local/ipv4 sockets
+			   we default to allowing unix/ipv4 sockets
 			   if any connect/bind rules are specified
 			*/
 			if (proc->ips != NULL) {
 				add_sock_family(proc, "unix");
-				add_sock_family(proc, "local");
 				add_sock_family(proc, "ipv4");
 			} else if (!proc->sock_families[0] &&
 				   !proc->sock_families[1]) {
