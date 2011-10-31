@@ -505,8 +505,10 @@ int reduce_all_children(struct gr_learn_file_node *node)
 		if (!((*tmp)->leaves)) {
 			node->mode |= (*tmp)->mode;
 			if (node->subject && (*tmp)->subject) {
+				/* merge capabilities */
 				node->subject->cap_raise = cap_combine(node->subject->cap_raise, 
 								       (*tmp)->subject->cap_raise);
+				/* merge resources */
 				node->subject->resmask |= (*tmp)->subject->resmask;
 				for (i = 0; i < GR_NLIMITS; i++) {
 					if ((*tmp)->subject->res[i].rlim_cur > node->subject->res[i].rlim_cur)
@@ -514,6 +516,9 @@ int reduce_all_children(struct gr_learn_file_node *node)
 					if ((*tmp)->subject->res[i].rlim_max > node->subject->res[i].rlim_max)
 						node->subject->res[i].rlim_max = (*tmp)->subject->res[i].rlim_max;
 				}
+				/* merge socket families */
+				for (i = 0; i < SIZE(node->subject->sock_families); i++)
+					node->subject->sock_families[i] |= (*tmp)->subject->sock_families[i];
 			}
 		} else
 			not_leaf++;
@@ -558,8 +563,10 @@ int reduce_all_leaves(struct gr_learn_file_node *node)
 		reduce_all_leaves(*tmp);
 		node->mode |= (*tmp)->mode;
 		if (node->subject && (*tmp)->subject) {
+			/* merge capabilities */
 			node->subject->cap_raise = cap_combine(node->subject->cap_raise,
 							       (*tmp)->subject->cap_raise);
+			/* merge resources */
 			node->subject->resmask |= (*tmp)->subject->resmask;
 			for (i = 0; i < GR_NLIMITS; i++) {
 				if ((*tmp)->subject->res[i].rlim_cur > node->subject->res[i].rlim_cur)
@@ -567,6 +574,9 @@ int reduce_all_leaves(struct gr_learn_file_node *node)
 				if ((*tmp)->subject->res[i].rlim_max > node->subject->res[i].rlim_max)
 					node->subject->res[i].rlim_max = (*tmp)->subject->res[i].rlim_max;
 			}
+			/* merge socket families */
+			for (i = 0; i < SIZE(node->subject->sock_families); i++)
+				node->subject->sock_families[i] |= (*tmp)->subject->sock_families[i];
 		}
 		cachednode = NULL;
 		cachedlen = 0;
@@ -1211,6 +1221,32 @@ show_ips:
 			display_ip_tree(connect, GR_IP_CONNECT, stream);
 		else
 			fprintf(stream, "\tconnect\tdisabled\n");
+		/* display socket families */
+		if (node->subject != NULL) {
+			int cnt = 0;
+			for (i = 0; i < (SIZE(node->subject->sock_families) * 32); i++)
+				if (node->subject->sock_families[i / 32] & (1 << (i % 32)))
+					cnt++;
+			/* if we have bind/connect rules and no extra family allowance outside of
+			   the default, then don't add a sock_family rule
+			*/
+			if ((bind || connect) &&
+				((node->subject->sock_families[0] & ~((1 << AF_UNIX) | (1 << AF_LOCAL) | (1 << AF_INET))) ||
+				 node->subject->sock_families[1] != 0))
+				;
+			else if (cnt > 10)
+				fprintf(stream, "\tsock_family all\n");
+			else {
+				fprintf(stream, "\tsock_family");
+				for (i = 0; i < AF_MAX; i++) {
+					if ((bind || connect) && (i == AF_UNIX || i == AF_LOCAL || i == AF_INET))
+						continue;
+					if (node->subject->sock_families[i / 32] & (1 << (i % 32)))
+						fprintf(stream, " %s", sock_families[i].family_name);
+				}
+				fprintf(stream, "\n");
+			}
+		}
 		if (node->subject != NULL && node->subject->inaddr_any_override) {
 			struct in_addr addr;
 			addr.s_addr = node->subject->inaddr_any_override;
@@ -1696,7 +1732,6 @@ struct gr_learn_ip_node ** find_insert_ip(struct gr_learn_ip_node **base, u_int3
 	}
 }
 
-
 void insert_ip(struct gr_learn_ip_node **base, u_int32_t ip, u_int16_t port, u_int8_t proto,
 		u_int8_t socktype)
 {
@@ -1733,8 +1768,8 @@ void insert_ip(struct gr_learn_ip_node **base, u_int32_t ip, u_int16_t port, u_i
 
 static int strcompare(const void *x, const void *y)
 {
-        struct gr_learn_file_tmp_node *x1 = *(struct gr_learn_file_tmp_node **) x;
-        struct gr_learn_file_tmp_node *y1 = *(struct gr_learn_file_tmp_node **) y;
+        const struct gr_learn_file_tmp_node *x1 = *(const struct gr_learn_file_tmp_node * const *) x;
+        const struct gr_learn_file_tmp_node *y1 = *(const struct gr_learn_file_tmp_node * const *) y;
 
 	if (x1 == NULL && y1 == NULL)
 		return 0;

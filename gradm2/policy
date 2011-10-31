@@ -82,6 +82,9 @@
 #      in this subject, and inheritance flags added to executable objects
 #      in this subject
 # a -> allow this process to talk to the /dev/grsec device
+# s -> enable AT_SECURE when entering this subject
+#      (enables the same environment sanitization that occurs in glibc
+#	upon execution of a suid binary)
 #
 # user/group transitions:
 # You may now specify what users and groups a given subject can
@@ -129,6 +132,21 @@
 # interface).  Virtual interfaces are specified by the <ifname>#<vindex>
 # syntax.  If an interface is specified, no IP/netmask or host may be
 # specified for the rule.
+#
+# Allowing additional socket families:
+# Before v2.2.1 of the RBAC system, a subject that specified
+# connect/bind rules limited only the socket usage of IPv4, allowing
+# any other socket families to be used.  Starting with v2.2.1 of the 
+# RBAC system, when connect/bind rules are used, additional rules
+# will be required to unlock the use of additional socket families 
+# (outside of the common unix/local family).  Multiple families can be
+# specified per line.
+# To enable use of IPv6, add the line:
+# sock_allow_family ipv6
+# To enable use of netlink, add the line:
+# sock_allow_family netlink
+# To enable all other families, add the line:
+# sock_allow_family all
 #
 # New learning system:
 # To learn on a given subject: add l (the letter l, not the number 1)
@@ -186,6 +204,26 @@
 # results in a default-allow
 # For instance, if no capability rules are added, an implicit +CAP_ALL is used
 #
+# Commonly-used objects can be defined and used in multiple subjects
+# As an example, we'll create a variable out of a list of objects
+# and their associated permissions that RBAC enforces
+define grsec_denied {
+	/boot		h
+	/dev/grsec	h
+	/dev/kmem	h
+	/dev/mem	h
+	/dev/port	h
+	/etc/grsec	h
+	/proc/kcore	h
+	/proc/slabinfo	h
+	/proc/modules	h
+	/proc/kallsyms	h
+	# hide and suppress logs about accessing this path
+	/lib/modules	hs
+}
+# usage:
+# $grsec_denied
+
 
 role admin sA
 subject / rvka
@@ -199,7 +237,6 @@ subject /
 	/home		rwxcd
 	/mnt		rw
 	/dev
-	/dev/grsec	h
 	/dev/urandom	r
 	/dev/random	r
 	/dev/zero	rw
@@ -216,21 +253,15 @@ subject /
 	/dev/initctl	rw
 	/dev/fd0	r
 	/dev/cdrom	r
-	/dev/mem	h
-	/dev/kmem	h
-	/dev/port	h
 	/bin		rx
 	/sbin		rx
 	/lib		rx
+	/lib64		rx
 	/usr		rx
 # compilation of kernel code should be done within the admin role	
 	/usr/src	h
 	/etc		rx
 	/proc		rwx
-	/proc/slabinfo	h
-	/proc/kcore	h
-	/proc/kallsyms  h
-	/proc/modules   h
 	/proc/sys	r
 	/root		r
 	/tmp		rwcd
@@ -238,9 +269,8 @@ subject /
 	/var/tmp	rwcd
 	/var/log	r
 # hide the kernel images and modules
-	/boot		h
-	/lib/modules	h
-	/etc/grsec	h
+	$grsec_denied
+
 	/etc/ssh	h
 
 # if sshd needs to be restarted, it can be done through the admin role
@@ -261,6 +291,7 @@ subject /
 	-CAP_NET_RAW
 	-CAP_SYS_CHROOT
 	-CAP_SYS_BOOT
+	-CAP_SETFCAP
 
 #	RES_AS 100M 100M
 
@@ -273,7 +304,8 @@ subject /
 # config file or taking the port it reserved to run a trojaned service)
 
 subject /usr/sbin/sshd dpo
-	/		h
+	/
+	/*		h
 	/bin/bash	x
 	/dev		h
 	/dev/log	rw
@@ -287,19 +319,28 @@ subject /usr/sbin/sshd dpo
 	/etc		r
 	/etc/grsec	h
 	/home
+	/home/*/.ssh/authorized_keys r
 	/lib		rx
+	/lib64		rx
 	/root
 	/proc		r
+	/proc/*/oom_adj rw
 	/proc/kcore	h
 	/proc/sys	h
+	/proc/sys/kernel/ngroups_max r
+	/selinux	r
 	/usr/lib	rx
+	/usr/lib64	rx
 	/usr/share/zoneinfo r
 	/var/log
 	/var/mail
 	/var/log/lastlog	rw
 	/var/log/wtmp		w
+	/var/run
 	/var/run/sshd
 	/var/run/utmp		rw
+	/var/run/utmpx		rw
+	/var/run/.nscd_socket	rw
 
 	-CAP_ALL
 	+CAP_CHOWN
@@ -308,6 +349,16 @@ subject /usr/sbin/sshd dpo
 	+CAP_SYS_CHROOT
 	+CAP_SYS_RESOURCE
 	+CAP_SYS_TTY_CONFIG
+	+CAP_AUDIT_WRITE
+	# to access user keys
+	+CAP_DAC_OVERRIDE
+
+subject /usr/X11R6/bin/Xorg
+	/dev/mem	rw
+
+	+CAP_SYS_ADMIN
+	+CAP_SYS_TTY_CONFIG
+	+CAP_SYS_RAWIO
 
 subject /usr/X11R6/bin/XFree86
 	/dev/mem	rw
@@ -323,13 +374,25 @@ subject /usr/X11R6/bin/XFree86
 subject /usr/bin/ssh
 	/etc/ssh/ssh_config r
 
+subject /usr/bin/postgres
+	/dev/log rw
+
+subject /usr/bin/exim
+	/dev/log rw
+
 subject /sbin/klogd
 	+CAP_SYS_ADMIN
 
 subject /sbin/syslog-ng
 	+CAP_SYS_ADMIN
 
+subject /usr/sbin/rsyslogd
+	+CAP_SYS_ADMIN
+
 subject /usr/sbin/cron
+	/dev/log rw
+
+subject /usr/sbin/crond
 	/dev/log rw
 
 subject /bin/login
@@ -337,8 +400,18 @@ subject /bin/login
 	/var/log/wtmp w
 	/var/log/faillog rwcd
 
+subject /bin/su
+	/dev/log rw
+
+subject /usr/bin/sudo
+	/dev/log rw
+
 subject /sbin/getty
 	/var/log/wtmp w
 
 subject /sbin/init
 	/var/log/wtmp w
+
+subject /usr/bin/xauth
+	/home r
+	/home/*/.Xauthority-* rwcdl

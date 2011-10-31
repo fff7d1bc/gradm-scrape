@@ -23,6 +23,7 @@ int current_nest_depth = 0;
 %token <string> ID_NAME USER_TRANS_ALLOW GROUP_TRANS_ALLOW 
 %token <string> USER_TRANS_DENY GROUP_TRANS_DENY DOMAIN_TYPE DOMAIN
 %token <string> INTERFACE IPOVERRIDE REPLACE REP_ARG AUDIT
+%token <string> SOCKALLOWFAMILY SOCKFAMILY
 %token <num> OBJ_MODE SUBJ_MODE IPADDR IPNETMASK NOT
 %token <shortnum> IPPORT ROLE_TYPE 
 %type <num> subj_mode obj_mode ip_netmask invert_socket
@@ -61,6 +62,7 @@ various_acls:			role_label
 	|			object_connect_ip_label
 	|			object_bind_ip_label
 	|			object_ip_override_label
+	|			object_sock_allow_family
 	;
 
 replace_rule:			REPLACE REP_ARG REP_ARG
@@ -343,6 +345,11 @@ object_connect_ip_label:	CONNECT invert_socket IPADDR ip_netmask ip_ports ip_typ
 				}
 	;
 
+object_sock_allow_family:	SOCKALLOWFAMILY SOCKFAMILY
+				{
+				 add_sock_family(current_subject, $2);
+				}
+	;
 object_ip_override_label:
 				IPOVERRIDE IPADDR
 				{

@@ -29,6 +29,25 @@ expand_acls(void)
 
 	for_each_role(role, current_role) {
 		for_each_subject(proc, role) {
+			/* set up the socket families
+			   if proc->ips != NULL, then some connect/bind
+			   rules were specified
+			   we default to allowing unix/local/ipv4 sockets
+			   if any connect/bind rules are specified
+			*/
+			if (proc->ips != NULL) {
+				add_sock_family(proc, "unix");
+				add_sock_family(proc, "local");
+				add_sock_family(proc, "ipv4");
+			} else if (!proc->sock_families[0] &&
+				   !proc->sock_families[1]) {
+			/* there are no connect/bind rules and no
+			   socket_family rules, so we must allow
+			   all families
+			*/
+				add_sock_family(proc, "all");
+			}
+
 			if (!stat(proc->filename, &fstat) && S_ISREG(fstat.st_mode)) {
 				add_proc_object_acl(proc, gr_strdup(proc->filename), proc_object_mode_conv("rx"), GR_FLEARN);
 			}

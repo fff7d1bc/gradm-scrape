@@ -1,5 +1,78 @@
 #include "gradm.h"
 
+struct family_set sock_families[] = {
+	{ "unix", AF_UNIX },
+	{ "local", AF_LOCAL },
+	{ "inet", AF_INET },
+	{ "ipv4", AF_INET },
+	{ "ax25", AF_AX25 },
+	{ "ipx", AF_IPX },
+	{ "appletalk", AF_APPLETALK },
+	{ "netrom", AF_NETROM },
+	{ "bridge", AF_BRIDGE },
+	{ "atmpvc", AF_ATMPVC },
+	{ "x25", AF_X25 },
+	{ "ipv6", AF_INET6 },
+	{ "inet6", AF_INET6 },
+	{ "rose", AF_ROSE },
+	{ "decnet", AF_DECnet },
+	{ "netbeui", AF_NETBEUI },
+	{ "security", AF_SECURITY },
+	{ "key", AF_KEY },
+	{ "netlink", AF_NETLINK },
+	{ "route", AF_ROUTE },
+	{ "packet", AF_PACKET },
+	{ "ash", AF_ASH },
+	{ "econet", AF_ECONET },
+	{ "atmsvc", AF_ATMSVC },
+	{ "rds", AF_RDS },
+	{ "sna", AF_SNA },
+	{ "irda", AF_IRDA },
+	{ "ppox", AF_PPOX },
+	{ "wanpipe", AF_WANPIPE },
+	{ "llc", AF_LLC },
+	{ "tipc", AF_TIPC },
+	{ "bluetooth", AF_BLUETOOTH },
+	{ "iucv", AF_IUCV },
+	{ "rxrpc", AF_RXRPC },
+	{ "isdn", AF_ISDN },
+	{ "phonet", AF_PHONET },
+	{ "ieee802154", AF_IEEE802154 },
+	{ "caif", AF_CAIF },
+	{ "all", -1 }
+};
+
+void
+add_sock_family(struct proc_acl *subject, char *family)
+{
+	int i;
+
+	if (!strcmp(family, "all")) {
+		for (i = 0; i < SIZE(subject->sock_families); i++) {
+			subject->sock_families[i] = -1;
+		}
+		return;
+	}
+
+	for (i = 0; i < SIZE(sock_families); i++) {
+		if (strcmp(sock_families[i].family_name, family))
+			continue;
+		else
+			break;
+	}
+
+	if (i == SIZE(sock_families)) {
+		fprintf(stderr, "Invalid socket family %s on line %lu of %s.\n",
+			family, lineno, current_acl_file);
+		exit(EXIT_FAILURE);
+	}
+
+	subject->sock_families[sock_families[i].family_val / 32] |=
+				(1 << (sock_families[i].family_val % 32));
+
+	return;
+}
+
 void
 add_role_allowed_host(struct role_acl *role, char *host, u_int32_t netmask)
 {

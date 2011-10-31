@@ -65,7 +65,8 @@ static struct subj_mode_name_table {
 	GR_RELAXPTRACE, 'r'}, {
 	GR_INHERITLEARN, 'i'}, {
 	GR_POVERRIDE, 't'}, {
-	GR_KERNELAUTH, 'a'}
+	GR_KERNELAUTH, 'a'}, {
+	GR_ATSECURE, 's'}
 };
 
 void

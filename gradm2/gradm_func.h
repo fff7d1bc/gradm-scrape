@@ -163,4 +163,6 @@ void add_replace_string(char *name, char *replacewith);
 char *lookup_replace_string(char *name);
 char *process_string_replace(char *str);
 
+void add_sock_family(struct proc_acl *subject, char *family);
+
 #endif

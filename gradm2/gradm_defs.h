@@ -14,8 +14,8 @@
 #define GR_LEARN_PIPE_PATH	GRSEC_DIR "/.grlearn.pipe"
 #define GR_LEARN_PID_PATH	GRSEC_DIR "/.grlearn.pid"
 
-#define GR_VERSION		"2.2.0"
-#define GRADM_VERSION		0x2200
+#define GR_VERSION		"2.2.1"
+#define GRADM_VERSION		0x2201
 
 #define GR_PWONLY		0
 #define GR_PWANDSUM		1
@@ -62,6 +62,45 @@
 #define RLIMIT_RTTIME 15
 #endif
 
+#ifndef AF_RDS
+#define AF_RDS 21
+#endif
+#ifndef AF_SNA
+#define AF_SNA 22
+#endif
+#ifndef AF_IRDA
+#define AF_IRDA 23
+#endif
+#ifndef AF_PPOX
+#define AF_PPOX 24
+#endif
+#ifndef AF_WANPIPE
+#define AF_WANPIPE 25
+#endif
+#ifndef AF_LLC
+#define AF_LLC 26
+#endif
+#ifndef AF_CAN
+#define AF_CAN 29
+#endif
+#ifndef AF_TIPC
+#define AF_TIPC 30
+#endif
+#ifndef AF_ISDN
+#define AF_ISDN 34
+#endif
+#ifndef AF_PHONET
+#define AF_PHONET 35
+#endif
+#ifndef AF_IEEE802154
+#define AF_IEEE802154 36
+#endif
+#ifndef AF_CAIF
+#define AF_CAIF 37
+#endif
+#undef AF_MAX
+#define AF_MAX 38
+
 #define GR_NLIMITS	32
 #define GR_CRASH_RES	31
 
@@ -93,6 +132,7 @@ enum {
 	GR_IP_BIND 	= 0x01,
 	GR_IP_CONNECT 	= 0x02,
 	GR_IP_INVERT 	= 0x04,
+	GR_SOCK_FAMILY  = 0x20
 };
 
 enum {
@@ -167,7 +207,8 @@ enum {
 	GR_INHERITLEARN = 0x00004000,
 	GR_PROCFIND	= 0x00008000,
 	GR_POVERRIDE	= 0x00010000,
-	GR_KERNELAUTH	= 0x00020000
+	GR_KERNELAUTH	= 0x00020000,
+	GR_ATSECURE	= 0x00040000
 };
 
 enum {
@@ -183,6 +224,11 @@ typedef struct _gr_cap_t {
 struct capability_set {
 	char *cap_name;
 	int cap_val;
+};
+
+struct family_set {
+	char *family_name;
+	int family_val;
 };
 
 struct paxflag_set {
@@ -294,6 +340,7 @@ struct proc_acl {
 	u_int16_t user_trans_num;
 	u_int16_t group_trans_num;
 
+	u_int32_t sock_families[2];
 	u_int32_t ip_proto[8];
 	u_int32_t ip_type;
 	struct ip_acl **ips;
@@ -365,6 +412,7 @@ struct gr_learn_subject_node {
 	u_int32_t resmask;
 	u_int16_t pax_flags;
 	u_int32_t inaddr_any_override;
+	u_int32_t sock_families[2];
 };
 
 struct gr_learn_file_node {
@@ -465,6 +513,7 @@ struct gr_arg_wrapper {
 extern char *rlim_table[GR_NLIMITS];
 extern struct capability_set capability_list[35];
 extern struct paxflag_set paxflag_list[5];
+extern struct family_set sock_families[AF_MAX+1];
 
 extern int is_24_kernel;
 

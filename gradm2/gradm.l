@@ -34,7 +34,7 @@ IP [0-9]{1,3}"."[0-9]{1,3}"."[0-9]{1,3}"."[0-9]{1,3}
 %x ROLE_STATE SUBJECT_STATE IP_STATE RES_STATE COMMENT_STATE ROLETYPE_STATE
 %x INCLUDE_STATE IPNETMASK_STATE IPPORT_STATE ROLETRANS_STATE
 %x VAR_STATE VAR_OBJ_STATE IDTRANS_STATE DOMAIN_STATE DOMAINTYPE_STATE
-%x DOMAINLIST_STATE IPIP_STATE IPONLY_STATE REP_STATE CAP_STATE
+%x DOMAINLIST_STATE IPIP_STATE IPONLY_STATE REP_STATE CAP_STATE FAMILY_STATE
 
 %%
 
@@ -115,7 +115,7 @@ IP [0-9]{1,3}"."[0-9]{1,3}"."[0-9]{1,3}"."[0-9]{1,3}
 						gradmerror("invalid pathname error");
 					  return SUBJ_NAME;
 					}
-<SUBJECT_STATE>[TKCAOtolhpkvdbria]+	{
+<SUBJECT_STATE>[TKCAOtolhpkvdbrias]+	{
 					  gradmlval.num = proc_subject_mode_conv(yytext);
 					  return SUBJ_MODE;
 					}
@@ -173,6 +173,10 @@ IP [0-9]{1,3}"."[0-9]{1,3}"."[0-9]{1,3}"."[0-9]{1,3}
 <IP_STATE>[a-z_-]+			{
 					  gradmlval.string = gr_strdup(yytext);
 					  return IPPROTO;
+					}
+<FAMILY_STATE>[0-9a-z]+			{
+					  gradmlval.string = gr_strdup(yytext);
+					  return SOCKFAMILY;
 					}
 
 <IPNETMASK_STATE>[0-9]{1,2}		{
@@ -306,6 +310,10 @@ IP [0-9]{1,3}"."[0-9]{1,3}"."[0-9]{1,3}"."[0-9]{1,3}
 "ip_override"				{
 					  BEGIN(IPONLY_STATE);
 					  return IPOVERRIDE;
+					}
+"sock_allow_family"			{
+					  BEGIN(FAMILY_STATE);
+					  return SOCKALLOWFAMILY;
 					}
 "include"[ \t]*[<][/].*[>]		{
 					  gr_line = strchr(yytext, '/');

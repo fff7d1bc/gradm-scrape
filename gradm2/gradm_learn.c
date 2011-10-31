@@ -144,6 +144,9 @@ void merge_acl_rules(void)
 
 				matchsubj->subject->inaddr_any_override = subject->inaddr_any_override;
 
+				for (i = 0; i < SIZE(subject->sock_families); i++)
+					matchsubj->subject->sock_families[i] |= subject->sock_families[i];
+
 				for (i = 0; i < subject->user_trans_num; i++) {
 					x = *(subject->user_transitions + i);
 					insert_learn_id_transition(&(matchsubj->user_trans_list), x, x, x);

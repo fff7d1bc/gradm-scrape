@@ -794,6 +794,18 @@ analyze_acls(void)
 		}
 
 
+		chk.u_caps = cap_conv("CAP_SETFCAP");
+		chk.w_caps = cap_full;
+
+		if (!check_permission(role, def_acl, "", &chk)) {
+			fprintf(stderr, "CAP_SETFCAP is not "
+				"removed for role %s.  This would allow an "
+				"attacker to set and modify file "
+				"capabilities.\n\n", role->rolename);
+			errs_found++;
+		}
+
+
 		errs_found += check_path_env(role, def_acl);
 		errs_found += check_lib_paths(role, def_acl);
 		errs_found += check_lilo_conf(role, def_acl);
