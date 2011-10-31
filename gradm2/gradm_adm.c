@@ -274,10 +274,10 @@ void add_rolelearn_acl(void)
 void start_grlearn(char *logfile)
 {
 	pid_t pid;
-	int fds[2];
 	int ret;
 
-	ret = pipe(fds);
+	unlink(GR_LEARN_PIPE_PATH);
+	ret = mkfifo(GR_LEARN_PIPE_PATH, S_IRUSR | S_IWUSR);
 	if (ret == -1) {
 		fprintf(stderr, "Error creating pipe.\n");
 		exit(EXIT_FAILURE);
@@ -286,16 +286,22 @@ void start_grlearn(char *logfile)
 	pid = fork();
 
 	if (!pid) {
-		close(fds[0]); // close read end
 		execl(GRLEARN_PATH, GRLEARN_PATH, logfile, NULL);
 		exit(EXIT_FAILURE);
 	} else if (pid > 0) {
 		char b;
 		int read_bytes;
+		int fd;
 
-		close(fds[1]); // close write end
-		read_bytes = read(fds[0], &b, 1);
-		close(fds[0]);
+		fd = open(GR_LEARN_PIPE_PATH, O_RDONLY);
+		if (fd < 0) {
+			fprintf(stderr, "Unable to open pipe.\n");
+			kill(pid, 9);
+			exit(EXIT_FAILURE);
+		}
+
+		read_bytes = read(fd, &b, 1);
+		close(fd);
 	} else {
 		fprintf(stderr, "Error starting grlearn.\n");
 		exit(EXIT_FAILURE);

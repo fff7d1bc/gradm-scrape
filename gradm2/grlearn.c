@@ -6,9 +6,9 @@ static struct always_reduce_entry {
 	unsigned int len;
 } *always_reduce_paths;
 
-#define GR_LEARN_PID_PATH GRSEC_DIR "/.grlearn.pid"
 #define LEARN_BUFFER_SIZE (512 * 1024)
 #define MAX_ENTRY_SIZE 16384
+#define NUM_CACHE_ENTRIES 640
 
 static char *writebuf;
 static char *writep;
@@ -117,7 +117,7 @@ int write_pid_log(pid_t pid)
 		kill(learn_pid, 15);
 	}
 start:		
-	fd = open(GR_LEARN_PID_PATH, O_WRONLY | O_CREAT | O_EXCL, 0600);
+	fd = open(GR_LEARN_PID_PATH, O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
 
 	if (fd < 0) {
 		fprintf(stdout, "Unable to open %s:\n"
@@ -139,7 +139,7 @@ struct cache_entry {
 	unsigned long checked;
 	unsigned int len;
 	unsigned char taken;
-} *cache[640];
+} *cache[NUM_CACHE_ENTRIES];
 static unsigned long check_count = 0;
 
 /* maintain a cache of most recently used items */
@@ -147,7 +147,7 @@ int check_cache(char *str, unsigned int len)
 {
 	int i;
 	check_count++;
-	for (i = 0; i < 640; i++) {
+	for (i = 0; i < NUM_CACHE_ENTRIES; i++) {
 		if (cache[i]->taken && cache[i]->len == len &&
 		    !strcmp(cache[i]->entryname, str)) {
 			cache[i]->used++;
@@ -162,17 +162,17 @@ void insert_into_cache(char *str, unsigned int len)
 {
 	int i;
 	struct cache_entry *least;
-	int start = random() % 639;
+	int start = random() % (NUM_CACHE_ENTRIES - 1);
 
 	least = cache[start];
 
-	for (i = start + 1; i != start; i = (i + 1) % 640) {
+	for (i = start + 1; i != start; i = (i + 1) % NUM_CACHE_ENTRIES) {
 		if (!cache[i]->taken) {
 			cache[i]->taken = 1;
 			least = cache[i];
 			break;
 		}
-		if (cache[i]->used < least->used && (cache[i]->checked + 1280) < check_count)
+		if (cache[i]->used < least->used && (cache[i]->checked + (NUM_CACHE_ENTRIES * 2)) < check_count)
 			least = cache[i];
 	}
 
@@ -273,7 +273,7 @@ int main(int argc, char *argv[])
 	if (!writebuf)
 		return 1;
 	writep = writebuf;
-	for(i = 0; i < 640; i++) {
+	for(i = 0; i < NUM_CACHE_ENTRIES; i++) {
 		cache[i] = calloc(1, sizeof(struct cache_entry));
 		if (!cache[i])
 			return 1;
@@ -295,7 +295,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	fd2 = open(argv[1], O_WRONLY | O_APPEND | O_CREAT, 0600);
+	fd2 = open(argv[1], O_WRONLY | O_APPEND | O_CREAT, S_IRUSR | S_IWUSR);
 
 	if (fd2 < 0) {
 		fprintf(stdout, "Error opening %s\n"
@@ -312,17 +312,25 @@ int main(int argc, char *argv[])
 		exit(EXIT_SUCCESS);
 	} else if (!pid) {
 		char b;
+		int pipefd;
 
 		write_pid_log(getpid());
-		ignore_ret = write(4, &b, 1);
+		pipefd = open(GR_LEARN_PIPE_PATH, O_WRONLY);
+		if (pipefd >= 0) {
+			ignore_ret = write(pipefd, &b, 1);
+			close(pipefd);
+		}
 		close(0);
 		close(1);
 		close(2);
-		close(4);
 	} else {
 		char b;
-		ignore_ret = write(4, &b, 1);
-		close(4);
+		int pipefd;
+		pipefd = open(GR_LEARN_PIPE_PATH, O_WRONLY);
+		if (pipefd >= 0) {
+			ignore_ret = write(pipefd, &b, 1);
+			close(pipefd);
+		}
 		fprintf(stdout, "Unable to fork.\n");
 		exit(EXIT_FAILURE);
 	}

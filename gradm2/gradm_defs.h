@@ -11,6 +11,8 @@
 #define GR_POLICY_PATH 		GRSEC_DIR "/policy"
 #define GR_PW_PATH 		GRSEC_DIR "/pw"
 #define GR_LEARN_CONFIG_PATH	GRSEC_DIR "/learn_config"
+#define GR_LEARN_PIPE_PATH	GRSEC_DIR "/.grlearn.pipe"
+#define GR_LEARN_PID_PATH	GRSEC_DIR "/.grlearn.pid"
 
 #define GR_VERSION		"2.2.0"
 #define GRADM_VERSION		0x2200
