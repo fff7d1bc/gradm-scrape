@@ -652,21 +652,18 @@ add_proc_object_acl(struct proc_acl *subject, char *filename,
 			return 1;
 		}
 	} else if ((p2 = is_proc_object_dupe(subject, p))) {
-		if (type & GR_IGNOREDUPE)
+		if ((type & GR_IGNOREDUPE) || (p2->mode == p->mode))
 			return 1;
-		fprintf(stderr, "%sDuplicate object found for \"%s\""
+		fprintf(stderr, "Duplicate object found for \"%s\""
 			" in role %s, subject %s, on line %lu of %s.\n"
 			"\"%s\" references the same object as the following object(s):\n",
-			p2->mode == p->mode ? "Warning: " : "", p->filename, current_role->rolename, 
+			p->filename, current_role->rolename, 
 			subject->filename, lineno, 
 			current_acl_file ? current_acl_file : "<builtin_fulllearn_policy>", p->filename);
 		display_all_dupes(subject, p);
 		fprintf(stderr, "specified on an earlier line.\n");
-		if (p2->mode != p->mode) {
-			fprintf(stderr, "The RBAC system will not load until this error is fixed.\n");
-			exit(EXIT_FAILURE);
-		} else // modes are the same, just drop the dupe
-			return 1;
+		fprintf(stderr, "The RBAC system will not load until this error is fixed.\n");
+		exit(EXIT_FAILURE);
 	}
 
 	insert_acl_object(subject, p);
