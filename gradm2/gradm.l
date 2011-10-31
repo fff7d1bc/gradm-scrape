@@ -115,7 +115,7 @@ IP [0-9]{1,3}"."[0-9]{1,3}"."[0-9]{1,3}"."[0-9]{1,3}
 						gradmerror("invalid pathname error");
 					  return SUBJ_NAME;
 					}
-<SUBJECT_STATE>[TKCAOtolhpkvdbrias]+	{
+<SUBJECT_STATE>[TKCAOtolhpkvdbriasx]+	{
 					  gradmlval.num = proc_subject_mode_conv(yytext);
 					  return SUBJ_MODE;
 					}

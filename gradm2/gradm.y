@@ -99,7 +99,7 @@ variable_expression:		VARIABLE
 variable_object:		DEFINE DEFINE_NAME '{' var_object_list '}'
 				{
 				  if (sym_retrieve($2)) {
-					fprintf(stderr, "Duplicate variable \"%s\" defined on line %lu of %s.\n", $1, lineno, current_acl_file);
+					fprintf(stderr, "Duplicate variable \"%s\" defined on line %lu of %s.\n", $2, lineno, current_acl_file);
 					exit(EXIT_FAILURE);
 				  }
 				  sym_store($2, var_obj);

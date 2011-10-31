@@ -917,6 +917,9 @@ proc_subject_mode_conv(const char *mode)
 		case 's':
 			retmode |= GR_ATSECURE;
 			break;
+		case 'x':
+			retmode |= GR_SHMEXEC;
+			break;
 		default:
 			fprintf(stderr, "Invalid subject mode "
 				"\'%c\' found on line %lu "

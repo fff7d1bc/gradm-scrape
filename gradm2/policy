@@ -104,6 +104,7 @@
 # s -> enable AT_SECURE when entering this subject
 #      (enables the same environment sanitization that occurs in glibc
 #	upon execution of a suid binary)
+# x -> allows executable anonymous shared memory for this subject
 #
 # user/group transitions:
 # You may now specify what users and groups a given subject can
