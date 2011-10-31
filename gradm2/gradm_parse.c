@@ -59,6 +59,7 @@ void
 add_id_transition(struct proc_acl *subject, char *idname, int usergroup, int allowdeny)
 {
 	int i;
+	int id;
 
 	if (usergroup == GR_ID_USER) {
 		if ((subject->user_trans_type | allowdeny) == (GR_ID_ALLOW | GR_ID_DENY)) {
@@ -70,9 +71,11 @@ add_id_transition(struct proc_acl *subject, char *idname, int usergroup, int all
 		}
 		subject->user_trans_type |= allowdeny;
 
+		id = get_id_from_role_name(idname, GR_ROLE_USER);
+
 		/* dupecheck */
 		for (i = 0; i < subject->user_trans_num; i++)
-			if (*(subject->user_transitions + i) == usergroup)
+			if (subject->user_transitions[i] == id)
 				return;
 
 		/* increment pointer count upon allocation of user transition list */
@@ -81,7 +84,7 @@ add_id_transition(struct proc_acl *subject, char *idname, int usergroup, int all
 
 		subject->user_trans_num++;
 		subject->user_transitions = gr_dyn_realloc(subject->user_transitions, subject->user_trans_num * sizeof(uid_t));
-		*(subject->user_transitions + subject->user_trans_num - 1) = get_id_from_role_name(idname, GR_ROLE_USER);
+		subject->user_transitions[subject->user_trans_num - 1] = id;
 	} else if (usergroup == GR_ID_GROUP) {
 		if ((subject->group_trans_type | allowdeny) == (GR_ID_ALLOW | GR_ID_DENY)) {
 			fprintf(stderr, "Error on line %lu of %s.  You cannot use "
@@ -92,9 +95,11 @@ add_id_transition(struct proc_acl *subject, char *idname, int usergroup, int all
 		}
 		subject->group_trans_type |= allowdeny;
 
+		id = get_id_from_role_name(idname, GR_ROLE_GROUP);
+
 		/* dupecheck */
 		for (i = 0; i < subject->group_trans_num; i++)
-			if (*(subject->group_transitions + i) == usergroup)
+			if (subject->group_transitions[i] == id)
 				return;
 
 		/* increment pointer count upon allocation of group transition list */
@@ -103,7 +108,7 @@ add_id_transition(struct proc_acl *subject, char *idname, int usergroup, int all
 
 		subject->group_trans_num++;
 		subject->group_transitions = gr_dyn_realloc(subject->group_transitions, subject->group_trans_num * sizeof(gid_t));
-		*(subject->group_transitions + subject->group_trans_num - 1) = get_id_from_role_name(idname, GR_ROLE_GROUP);
+		subject->group_transitions[subject->group_trans_num - 1] = id;
 	}
 
 	return;
