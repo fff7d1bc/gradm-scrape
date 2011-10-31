@@ -660,6 +660,8 @@ add_proc_object_acl(struct proc_acl *subject, char *filename,
 			if(!add_proc_object_acl(subject, gr_strdup(buf), mode, type | GR_SYMLINK))
 				return 0;
 		}
+	} else {
+		link_count = 0;
 	}
 
 	if ((p =
