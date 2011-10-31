@@ -112,10 +112,10 @@ add_gradm_acl(struct role_acl *role)
 	add_proc_object_acl(current_subject, "/dev/urandom", proc_object_mode_conv("r"), GR_FEXIST);
 	add_proc_object_acl(current_subject, "/lib", proc_object_mode_conv("rx"), GR_FEXIST);
 	add_proc_object_acl(current_subject, "/usr/lib", proc_object_mode_conv("rx"), GR_FEXIST);
-	/* we add GR_SYMLINK to ignore fatal duplicate errors if /lib64 
+	/* we add GR_IGNOREDUPE to ignore fatal duplicate errors if /lib64 
 	   is symlinked to /lib for whatever reason */
-	add_proc_object_acl(current_subject, "/lib64", proc_object_mode_conv("rx"), GR_FEXIST | GR_SYMLINK);
-	add_proc_object_acl(current_subject, "/usr/lib64", proc_object_mode_conv("rx"), GR_FEXIST | GR_SYMLINK);
+	add_proc_object_acl(current_subject, "/lib64", proc_object_mode_conv("rx"), GR_FEXIST | GR_IGNOREDUPE);
+	add_proc_object_acl(current_subject, "/usr/lib64", proc_object_mode_conv("rx"), GR_FEXIST | GR_IGNOREDUPE);
 	add_proc_object_acl(current_subject, gradm_name, proc_object_mode_conv("x"), GR_FEXIST);
 	add_proc_object_acl(current_subject, GRPAM_PATH, proc_object_mode_conv("x"), GR_FEXIST);
 
@@ -177,8 +177,8 @@ add_gradm_pam_acl(struct role_acl *role)
 	add_proc_object_acl(current_subject, "/dev/null", proc_object_mode_conv("rw"), GR_FEXIST);
 	add_proc_object_acl(current_subject, "/lib", proc_object_mode_conv("rx"), GR_FEXIST);
 	add_proc_object_acl(current_subject, "/usr/lib", proc_object_mode_conv("rx"), GR_FEXIST);
-	add_proc_object_acl(current_subject, "/lib64", proc_object_mode_conv("rx"), GR_FEXIST | GR_SYMLINK);
-	add_proc_object_acl(current_subject, "/usr/lib64", proc_object_mode_conv("rx"), GR_FEXIST | GR_SYMLINK);
+	add_proc_object_acl(current_subject, "/lib64", proc_object_mode_conv("rx"), GR_FEXIST | GR_IGNOREDUPE);
+	add_proc_object_acl(current_subject, "/usr/lib64", proc_object_mode_conv("rx"), GR_FEXIST | GR_IGNOREDUPE);
 	add_proc_object_acl(current_subject, GRPAM_PATH, proc_object_mode_conv("x"), GR_FEXIST);
 
 	add_cap_acl(current_subject, "-CAP_ALL", NULL);

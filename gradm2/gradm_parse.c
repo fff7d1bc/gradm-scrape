@@ -575,6 +575,8 @@ parse_homedir(char *filename)
 	return newfilename;
 }
 
+static uid_t symlink_uid;
+
 int
 add_proc_object_acl(struct proc_acl *subject, char *filename,
 		    u_int32_t mode, int type)
@@ -639,6 +641,12 @@ add_proc_object_acl(struct proc_acl *subject, char *filename,
 	num_pointers += 4;
 
 	if (lstat64(filename, &fstat)) {
+		/* don't add object for dangling symlink */
+		if (type & GR_SYMLINK) {
+			num_objects--;
+			num_pointers -= 4;
+			return 1;
+		}
 		dfile = add_deleted_file(filename);
 		fstat.st_ino = dfile->ino;
 		fstat.st_dev = 0;
@@ -652,14 +660,26 @@ add_proc_object_acl(struct proc_acl *subject, char *filename,
 		} else {
 			char buf[PATH_MAX];
 			memset(&buf, 0, sizeof (buf));
+
+			if (!(type & GR_SYMLINK))
+				symlink_uid = fstat.st_uid;
+
 			if (!realpath(filename, buf)) {
 				fprintf(stderr, "Error determining real path for %s\n", filename);
 				exit(EXIT_FAILURE);
 			}
 			link_count++;
-			if(!add_proc_object_acl(subject, gr_strdup(buf), mode, type | GR_SYMLINK))
+			if(!add_proc_object_acl(subject, gr_strdup(buf), mode, type | GR_IGNOREDUPE | GR_SYMLINK))
 				return 0;
 		}
+	} else if ((type & GR_SYMLINK) && (fstat.st_uid != symlink_uid)) {
+		/* don't add symlink target if the owner of the symlink !=
+		   the owner of the target
+		*/
+		link_count = 0;
+		num_objects--;
+		num_pointers -= 4;
+		return 1;
 	} else {
 		link_count = 0;
 	}
@@ -699,7 +719,7 @@ add_proc_object_acl(struct proc_acl *subject, char *filename,
 			return 1;
 		}
 	} else if ((p2 = is_proc_object_dupe(subject, p))) {
-		if (type & GR_SYMLINK)
+		if (type & GR_IGNOREDUPE)
 			return 1;
 		fprintf(stderr, "Duplicate object found for \"%s\""
 			" in role %s, subject %s, on line %lu of %s.\n"
