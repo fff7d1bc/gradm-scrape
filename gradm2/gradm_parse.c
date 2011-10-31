@@ -301,6 +301,17 @@ add_role_acl(struct role_acl **role, char *rolename, u_int16_t type, int ignore)
 	struct passwd *pwd;
 	struct group *grp;
 
+	if (current_role && current_role->hash == NULL) {
+		fprintf(stderr, "Error on line %lu of %s: "
+				"Attempting to add the role \"%s\" when "
+				"no subjects have been specified for "
+				"the previous role \"%s\".\nThe RBAC "
+				"system will not be allowed to be "
+				"enabled until this error is fixed.\n", 
+			lineno, current_acl_file, rolename, current_role->rolename);
+		exit(EXIT_FAILURE);
+	}
+
 	num_roles++;
 
 	/* one for role, one for name */
