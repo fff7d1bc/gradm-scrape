@@ -166,6 +166,7 @@ char *process_string_replace(char *str);
 void sort_file_node_list(struct gr_learn_file_node *root);
 
 void add_sock_family(struct proc_acl *subject, char *family);
+char *get_sock_family_from_val(int val);
 
 #ifdef GRADM_DEBUG
 void check_file_node_list_integrity(struct gr_learn_file_node **filelist);

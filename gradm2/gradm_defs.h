@@ -523,7 +523,7 @@ struct gr_arg_wrapper {
 extern char *rlim_table[GR_NLIMITS];
 extern struct capability_set capability_list[35];
 extern struct paxflag_set paxflag_list[5];
-extern struct family_set sock_families[AF_MAX+1];
+extern struct family_set sock_families[AF_MAX+2];
 
 extern int is_24_kernel;
 

@@ -1475,7 +1475,7 @@ show_ips:
 					if ((bind || connect) && (i == AF_UNIX || i == AF_LOCAL || i == AF_INET))
 						continue;
 					if (node->subject->sock_families[i / 32] & (1 << (i % 32)))
-						fprintf(stream, " %s", sock_families[i].family_name);
+						fprintf(stream, " %s", get_sock_family_from_val(i));
 				}
 				fprintf(stream, "\n");
 			}

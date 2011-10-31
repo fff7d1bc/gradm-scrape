@@ -1,6 +1,7 @@
 #include "gradm.h"
 
 struct family_set sock_families[] = {
+	{ "unspec", AF_UNSPEC },
 	{ "unix", AF_UNIX },
 	{ "local", AF_LOCAL },
 	{ "inet", AF_INET },
@@ -41,6 +42,22 @@ struct family_set sock_families[] = {
 	{ "caif", AF_CAIF },
 	{ "all", -1 }
 };
+
+char *
+get_sock_family_from_val(int val)
+{
+	int i;
+
+	for (i = 0; i < SIZE(sock_families); i++) {
+		if (sock_families[i].family_val == val)
+			return sock_families[i].family_name;
+	}
+
+	fprintf(stderr, "Invalid socket family detected.\n");
+	exit(EXIT_FAILURE);
+
+	return NULL;
+}
 
 void
 add_sock_family(struct proc_acl *subject, char *family)
