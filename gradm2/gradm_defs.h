@@ -361,6 +361,8 @@ struct proc_acl {
 };
 
 struct gr_learn_ip_node {
+	struct gr_learn_ip_node *prev;
+	struct gr_learn_ip_node *next;
 	u_int8_t ip_node;
 	u_int16_t **ports;
 	u_int32_t ip_proto[8];
@@ -369,10 +371,12 @@ struct gr_learn_ip_node {
 	unsigned char all_low_ports:1;
 	unsigned char all_high_ports:1;
 	struct gr_learn_ip_node *parent;
-	struct gr_learn_ip_node **leaves;
+	struct gr_learn_ip_node *leaves;
 };
 
 struct gr_learn_role_entry {
+	struct gr_learn_role_entry *prev;
+	struct gr_learn_role_entry *next;
 	char *rolename;
 	u_int16_t rolemode;
 	unsigned int id;
@@ -382,9 +386,11 @@ struct gr_learn_role_entry {
 };	
 
 struct gr_learn_group_node {
+	struct gr_learn_group_node *prev;
+	struct gr_learn_group_node *next;
 	char *rolename;
 	gid_t gid;
-	struct gr_learn_user_node **users;
+	struct gr_learn_user_node *users;
 	struct gr_hash_struct *hash;
 	struct gr_learn_file_node *subject_list;
 	struct gr_learn_ip_node *allowed_ips;
@@ -397,6 +403,8 @@ struct gr_learn_file_tmp_node {
 };
 
 struct gr_learn_user_node {
+	struct gr_learn_user_node *prev;
+	struct gr_learn_user_node *next;
 	char *rolename;
 	uid_t uid;
 	int multgroups;
@@ -416,9 +424,11 @@ struct gr_learn_subject_node {
 };
 
 struct gr_learn_file_node {
+	struct gr_learn_file_node *prev;
+	struct gr_learn_file_node *next;
 	char *filename;
 	u_int32_t mode;
-	struct gr_learn_file_node **leaves;
+	struct gr_learn_file_node *leaves;
 	struct gr_learn_file_node *parent;
 	struct gr_hash_struct *hash;
 	struct gr_learn_file_node *object_list;

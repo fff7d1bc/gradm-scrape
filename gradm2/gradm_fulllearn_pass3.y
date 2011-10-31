@@ -2,7 +2,7 @@
 #include "gradm.h"
 extern int fulllearn_pass3lex(void);
 
-extern struct gr_learn_group_node **role_list;
+extern struct gr_learn_group_node *the_role_list;
 %}
 
 %union {
@@ -60,7 +60,7 @@ learn_log:
 			res1 = $13;
 			res2 = $15;
 
-			match_role(role_list, uid, gid, &group, &user);
+			match_role(the_role_list, uid, gid, &group, &user);
 			/* only add objects for the role currently in memory */
 			if ((current_learn_rolemode == GR_ROLE_GROUP && group && !strcmp(group->rolename, current_learn_rolename)) ||
 			    (current_learn_rolemode == GR_ROLE_USER && user && !strcmp(user->rolename, current_learn_rolename)))
@@ -120,7 +120,7 @@ learn_log:
 			proto = $19;
 			mode = $21;
 
-			match_role(role_list, uid, gid, &group, &user);
+			match_role(the_role_list, uid, gid, &group, &user);
 			/* only add objects for the role currently in memory */
 			if ((current_learn_rolemode == GR_ROLE_GROUP && group && !strcmp(group->rolename, current_learn_rolename)) ||
 			    (current_learn_rolemode == GR_ROLE_USER && user && !strcmp(user->rolename, current_learn_rolename)))
@@ -175,7 +175,7 @@ learn_log:
 			eff = $17;
 			fs = $19;
 
-			match_role(role_list, uid, gid, &group, &user);
+			match_role(the_role_list, uid, gid, &group, &user);
 			/* only add objects for the role currently in memory */
 			if ((current_learn_rolemode == GR_ROLE_GROUP && group && !strcmp(group->rolename, current_learn_rolename)) ||
 			    (current_learn_rolemode == GR_ROLE_USER && user && !strcmp(user->rolename, current_learn_rolename)))

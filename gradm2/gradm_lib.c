@@ -524,11 +524,9 @@ char *gr_get_user_name(uid_t uid)
 	struct gr_user_map *tmpuser = user_list;
 	struct passwd *pwd;
 
-	if (tmpuser) {
-		do {
-			if (tmpuser->uid == uid)
-				return tmpuser->user;
-		} while ((tmpuser = tmpuser->next));
+	for_each_list_entry(tmpuser, user_list) {
+		if (tmpuser->uid == uid)
+			return tmpuser->user;
 	}
 
 	pwd = getpwuid(uid);
@@ -546,14 +544,12 @@ char *gr_get_user_name(uid_t uid)
 
 char *gr_get_group_name(gid_t gid)
 {
-	struct gr_group_map *tmpgroup = group_list;
+	struct gr_group_map *tmpgroup;
 	struct group *grp;
 
-	if (tmpgroup) {
-		do {
-			if (tmpgroup->gid == gid)
-				return tmpgroup->group;
-		} while ((tmpgroup = tmpgroup->next));
+	for_each_list_entry (tmpgroup, group_list) {
+		if (tmpgroup->gid == gid)
+			return tmpgroup->group;
 	}
 
 	grp = getgrgid(gid);

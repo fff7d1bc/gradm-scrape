@@ -3,7 +3,7 @@
 extern struct gr_learn_file_node **cachednode;
 extern unsigned int cachedlen;
 
-struct gr_learn_group_node **role_list = NULL;
+struct gr_learn_group_node *the_role_list = NULL;
 extern FILE *fulllearn_pass1in;
 extern FILE *fulllearn_pass2in;
 extern FILE *fulllearn_pass3in;
@@ -21,7 +21,7 @@ void fulllearn_pass1(FILE *stream)
 	fflush(stdout);
 	printf("Beginning full learning role reduction...");
 	fflush(stdout);
-	reduce_roles(&role_list);
+	reduce_roles(&the_role_list);
 	printf("done.\n");
 	fflush(stdout);
 
@@ -95,8 +95,8 @@ void fulllearn_pass2(FILE *stream)
 	printf("done.\n");
 	fflush(stdout);
 
-	traverse_roles(role_list, &full_reduce_subjects, NULL);
-	traverse_roles(role_list, &full_reduce_allowed_ips, NULL);
+	traverse_roles(the_role_list, &full_reduce_subjects, NULL);
+	traverse_roles(the_role_list, &full_reduce_allowed_ips, NULL);
 
 	return;
 }
@@ -122,11 +122,25 @@ int full_reduce_object_node(struct gr_learn_file_node *subject,
 		insert_file(&(subject->object_list), tmptable[i]->filename, tmptable[i]->mode, 0);
 	}
 
+#ifdef GRADM_DEBUG
+	printf("\nBeginning first stage object reduction...\n");
+	check_file_node_list_integrity(&subject->object_list);
+#endif
 	first_stage_reduce_tree(subject->object_list);
+#ifdef GRADM_DEBUG
+	printf("Beginning second stage object reduction...\n");
+	check_file_node_list_integrity(&subject->object_list);
+#endif
 	second_stage_reduce_tree(subject->object_list);
-
+#ifdef GRADM_DEBUG
+	printf("Beginning high protected path enforcement...\n");
+	check_file_node_list_integrity(&subject->object_list);
+#endif
 	enforce_high_protected_paths(subject);
-
+#ifdef GRADM_DEBUG
+	printf("Beginning third stage object reduction...\n");
+	check_file_node_list_integrity(&subject->object_list);
+#endif
 	third_stage_reduce_tree(subject->object_list);
 
 	printf("done.\n");
@@ -217,23 +231,22 @@ int full_reduce_ips(struct gr_learn_group_node *group,
 
 void free_ip_ports(struct gr_learn_ip_node *node)
 {
-	struct gr_learn_ip_node **tmp;
+	struct gr_learn_ip_node *tmp, *tmp3;
 	u_int16_t **tmp2;
+	int removed = 0;
 
 	if (node == NULL)
 		return;
 
-	tmp = node->leaves;
-
-	while (tmp && *tmp) {
-		free_ip_ports(*tmp);
-		tmp++;
+	for_each_removable_list_entry(tmp, node->leaves) {
+		tmp3 = tmp->next;
+		free_ip_ports(tmp);
+		removed = 1;
+		tmp = tmp3;
+		for_each_removable_list_entry_end(tmp);
 	}
 	
-	if (node->leaves) {
-		gr_dyn_free(node->leaves);
-		node->leaves = NULL;
-	}
+	node->leaves = NULL;
 
 	tmp2 = node->ports;
 	while (tmp2 && *tmp2) {
@@ -243,30 +256,31 @@ void free_ip_ports(struct gr_learn_ip_node *node)
 
 	if (node->ports)
 		gr_dyn_free(node->ports);
+
+	node->ports = NULL;
+
 	gr_stat_free(node);
-	node = NULL;
 
 	return;
 }
 
 void free_subject_objects(struct gr_learn_file_node *node)
 {
-	struct gr_learn_file_node **tmp;
+	struct gr_learn_file_node *tmp, *tmp2;
+	int removed = 0;
 
 	if (node == NULL)
 		return;
 
-	tmp = node->leaves;
-
-	while (tmp && *tmp) {
-		free_subject_objects(*tmp);
-		tmp++;
+	for_each_removable_list_entry(tmp, node->leaves) {
+		tmp2 = tmp->next;
+		free_subject_objects(tmp);
+		removed = 1;
+		tmp = tmp2;
+		for_each_removable_list_entry_end(tmp);
 	}
 
-	if (node->leaves) {
-		gr_dyn_free(node->leaves);
-		node->leaves = NULL;
-	}
+	node->leaves = NULL;
 
 	free_ip_ports(node->connect_list);
 	free_ip_ports(node->bind_list);
@@ -275,10 +289,9 @@ void free_subject_objects(struct gr_learn_file_node *node)
 		free(node->subject);
 		node->subject = NULL;
 	}
+
 	free(node->filename);
 	gr_stat_free(node);
-	node = NULL;
-	
 
 	return;
 }
@@ -467,8 +480,9 @@ void output_role_info(struct gr_learn_group_node *group, struct gr_learn_user_no
 
 void generate_full_learned_acls(FILE *learnlog, FILE *stream)
 {
-	struct gr_learn_group_node **group;
-	struct gr_learn_user_node **user;
+	struct gr_learn_group_node *group, *tmpgroup;
+	struct gr_learn_user_node *user, *tmpuser;
+	int removed = 0;
 
 	output_learn_header(stream);
 
@@ -477,32 +491,35 @@ void generate_full_learned_acls(FILE *learnlog, FILE *stream)
 	fulllearn_pass2(learnlog);
 	
 	fulllearn_pass3in = learnlog;
-	group = role_list;
 
-	if (!group)
-		goto out;
-
-	while (*group) {
-		user = (*group)->users;
-		if (!user) {
-			current_learn_rolename = (*group)->rolename;
+	for_each_removable_list_entry(group, the_role_list) {
+		if (group->users == NULL) {
+			current_learn_rolename = group->rolename;
 			current_learn_rolemode = GR_ROLE_GROUP;
-			output_role_info((*group), NULL, stream);
-			traverse_file_tree((*group)->subject_list, &fulllearn_pass3, NULL, stream);
-		} else {	
-			while (*user) {
-				current_learn_rolename = (*user)->rolename;
+			output_role_info(group, NULL, stream);
+			sort_file_node_list(group->subject_list);
+			traverse_file_tree(group->subject_list, &fulllearn_pass3, NULL, stream);
+		} else {
+			for_each_removable_list_entry(user, group->users) {
+				current_learn_rolename = user->rolename;
 				current_learn_rolemode = GR_ROLE_USER;
-				output_role_info(NULL, (*user), stream);
-				traverse_file_tree((*user)->subject_list, &fulllearn_pass3, NULL, stream);
-				free_role_user_full(*user);
-				user++;
+				output_role_info(NULL, user, stream);
+				sort_file_node_list(user->subject_list);
+				traverse_file_tree(user->subject_list, &fulllearn_pass3, NULL, stream);
+				tmpuser = user->next;
+				free_role_user_full(user);
+				user = tmpuser;
+				removed = 1;
+				for_each_removable_list_entry_end(user);
 			}
 		}
-		free_role_group_full(*group);
-		group++;
+		tmpgroup = group->next;
+		free_role_group_full(group);
+		group = tmpgroup;
+		removed = 1;
+		for_each_removable_list_entry_end(group);
 	}
-out:
+
 	fprintf(stdout, "Full learning complete.\n");
 	fclose(learnlog);
 	return;

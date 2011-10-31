@@ -70,6 +70,9 @@ always-reduce-path /usr/portage
 always-reduce-path /tmp
 always-reduce-path /var/tmp
 
+high-reduce-path /dev/.udev
+high-reduce-path /dev/mapper
+high-reduce-path /dev/snd
 high-reduce-path /proc
 high-reduce-path /lib
 high-reduce-path /lib64
@@ -78,8 +81,10 @@ high-reduce-path /lib64/tls
 high-reduce-path /lib/security
 high-reduce-path /lib/modules
 high-reduce-path /usr/lib
+high-reduce-path /usr/lib64
 high-reduce-path /usr/lib/tls
 high-reduce-path /usr/lib64/tls
+high-reduce-path /usr/lib64/openoffice
 high-reduce-path /var/lib
 high-reduce-path /usr/bin
 high-reduce-path /usr/sbin
@@ -92,6 +97,8 @@ high-reduce-path /usr/local/etc
 high-reduce-path /usr/local/lib
 high-reduce-path /usr/share
 high-reduce-path /usr/X11R6/lib
+high-reduce-path /var/lib/openldap-data
+high-reduce-path /var/lib/krb5kdc
 
 dont-reduce-path /
 dont-reduce-path /home
@@ -128,8 +135,7 @@ high-protected-path /dev/kmem
 high-protected-path /dev/port
 high-protected-path /dev/log
 high-protected-path /sys
-high-protected-path /etc/ppp/chap-secrets
-high-protected-path /etc/ppp/pap-secrets
+high-protected-path /etc/ppp
 high-protected-path /etc/samba/smbpasswd
 #to protect kernel images
 high-protected-path /boot

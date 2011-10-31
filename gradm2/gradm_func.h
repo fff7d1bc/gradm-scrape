@@ -71,17 +71,17 @@ struct var_object *differentiate_objects(struct var_object *var1, struct var_obj
 void sort_file_list(struct gr_hash_struct *hash);
 struct gr_learn_file_node *match_file_node(struct gr_learn_file_node *base, const char *filename);
 struct gr_learn_file_tmp_node *conv_filename_to_struct(char *filename, u_int32_t mode);
-void match_role(struct gr_learn_group_node **grouplist, uid_t uid, gid_t gid, struct gr_learn_group_node **group, struct gr_learn_user_node **user);
-struct gr_learn_ip_node ** find_insert_ip(struct gr_learn_ip_node **base, u_int32_t ip, struct gr_learn_ip_node **parent);
+void match_role(struct gr_learn_group_node *grouplist, uid_t uid, gid_t gid, struct gr_learn_group_node **group, struct gr_learn_user_node **user);
+struct gr_learn_ip_node * find_insert_ip(struct gr_learn_ip_node **base, u_int32_t ip);
 void conv_mode_to_str(u_int32_t mode, char *modestr, unsigned short len);
 void conv_subj_mode_to_str(u_int32_t mode, char *modestr, unsigned short len);
 void generate_full_learned_acls(FILE *learn_log, FILE *stream);
-void reduce_roles(struct gr_learn_group_node ***grouplist);
+void reduce_roles(struct gr_learn_group_node **grouplist);
 void insert_file(struct gr_learn_file_node **base, char *filename, u_int32_t mode, u_int8_t subj);
 void first_stage_reduce_tree(struct gr_learn_file_node *base);
 void second_stage_reduce_tree(struct gr_learn_file_node *base);
 void third_stage_reduce_tree(struct gr_learn_file_node *base);
-void traverse_roles(struct gr_learn_group_node **grouplist,
+void traverse_roles(struct gr_learn_group_node *grouplist,
 		int (*act)(struct gr_learn_group_node *group, struct gr_learn_user_node *user, FILE *stream),
 		FILE *stream);
 void traverse_file_tree(struct gr_learn_file_node *base,
@@ -89,7 +89,7 @@ void traverse_file_tree(struct gr_learn_file_node *base,
 		struct gr_learn_file_node *optarg, FILE *stream);
 void reduce_ip_tree(struct gr_learn_ip_node *base);
 void reduce_ports_tree(struct gr_learn_ip_node *base);
-void display_roles(struct gr_learn_group_node **grouplist, FILE *stream);
+void display_roles(struct gr_learn_group_node *grouplist, FILE *stream);
 void add_fulllearn_acl(void);
 void insert_ip(struct gr_learn_ip_node **base, u_int32_t ip, u_int16_t port, u_int8_t proto,
 		u_int8_t socktype);
@@ -97,13 +97,13 @@ int is_protected_path(char *filename, u_int32_t mode);
 
 void add_grlearn_option(u_int32_t option);
 struct gr_learn_role_entry *
-insert_learn_role(struct gr_learn_role_entry ***role_list, char *rolename, u_int16_t rolemode);
+insert_learn_role(struct gr_learn_role_entry **role_list, char *rolename, u_int16_t rolemode);
 void insert_learn_object(struct gr_learn_file_node *subject, struct gr_learn_file_tmp_node *object);
 void insert_learn_role_subject(struct gr_learn_role_entry *role, struct gr_learn_file_tmp_node *subject);
 void insert_learn_group_subject(struct gr_learn_group_node *role, struct gr_learn_file_tmp_node *subject);
 void insert_learn_user_subject(struct gr_learn_user_node *role, struct gr_learn_file_tmp_node *subject);
 struct gr_learn_role_entry *
-find_learn_role(struct gr_learn_role_entry **role_list, char *rolename);
+find_learn_role(struct gr_learn_role_entry *role_list, char *rolename);
 int full_reduce_object_node(struct gr_learn_file_node *subject,
 			    struct gr_learn_file_node *unused1,
 			    FILE *unused2);
@@ -121,7 +121,7 @@ void traverse_ip_tree(struct gr_learn_ip_node *base,
 			u_int8_t contype, FILE *stream);
 void display_tree(struct gr_learn_file_node *base, FILE *stream);
 void enforce_high_protected_paths(struct gr_learn_file_node *subject);
-void insert_user(struct gr_learn_group_node ***grouplist, char *username, char *groupname, uid_t uid, gid_t gid);
+void insert_user(struct gr_learn_group_node **grouplist, char *username, char *groupname, uid_t uid, gid_t gid);
 void add_rolelearn_acl(void);
 int ensure_subject_security(struct gr_learn_file_node *subject,
 			struct gr_learn_file_node *unused1,
@@ -163,6 +163,14 @@ void add_replace_string(char *name, char *replacewith);
 char *lookup_replace_string(char *name);
 char *process_string_replace(char *str);
 
+void sort_file_node_list(struct gr_learn_file_node *root);
+
 void add_sock_family(struct proc_acl *subject, char *family);
+
+#ifdef GRADM_DEBUG
+void check_file_node_list_integrity(struct gr_learn_file_node **filelist);
+void check_conformity_with_learned_rules(struct gr_learn_file_node *subject);
+void check_high_protected_path_enforcement(struct gr_learn_file_node *subject);
+#endif
 
 #endif

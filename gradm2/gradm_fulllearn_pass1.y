@@ -2,7 +2,7 @@
 #include "gradm.h"
 extern int fulllearn_pass1lex(void);
 
-extern struct gr_learn_group_node **role_list;
+extern struct gr_learn_group_node *the_role_list;
 %}
 
 %union {
@@ -43,7 +43,7 @@ learn_log:
 			group = gr_get_group_name(gid);
 
 			if (user && group)
-				insert_user(&role_list, user, group, uid, gid);
+				insert_user(&the_role_list, user, group, uid, gid);
 		}		
 	|	ROLENAME ':' NUM ':' NUM ':' NUM ':' filename ':' filename ':' IPADDR ':' NUM ':' NUM ':' NUM ':' NUM ':' IPADDR
 		{
@@ -59,7 +59,7 @@ learn_log:
 			group = gr_get_group_name(gid);
 
 			if (user && group)
-				insert_user(&role_list, user, group, uid, gid);
+				insert_user(&the_role_list, user, group, uid, gid);
 		}
 	|	ROLENAME ':' NUM ':' NUM ':' NUM ':' filename ':' filename ':' id_type ':' NUM ':' NUM ':' NUM ':' IPADDR
 		{
@@ -75,7 +75,7 @@ learn_log:
 			group = gr_get_group_name(gid);
 
 			if (user && group)
-				insert_user(&role_list, user, group, uid, gid);
+				insert_user(&the_role_list, user, group, uid, gid);
 		}
 	;
 %%

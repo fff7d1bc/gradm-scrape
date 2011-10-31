@@ -3,9 +3,9 @@
 extern int learn_pass1lex(void);
 
 extern struct gr_learn_role_entry *default_role_entry;
-extern struct gr_learn_role_entry **group_role_list;
-extern struct gr_learn_role_entry **user_role_list;
-extern struct gr_learn_role_entry **special_role_list;
+extern struct gr_learn_role_entry *group_role_list;
+extern struct gr_learn_role_entry *user_role_list;
+extern struct gr_learn_role_entry *special_role_list;
 
 %}
 

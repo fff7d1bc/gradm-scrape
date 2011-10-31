@@ -1,9 +1,9 @@
 #include "gradm.h"
 
 struct gr_learn_role_entry *default_role_entry;
-struct gr_learn_role_entry **group_role_list;
-struct gr_learn_role_entry **user_role_list;
-struct gr_learn_role_entry **special_role_list;
+struct gr_learn_role_entry *group_role_list;
+struct gr_learn_role_entry *user_role_list;
+struct gr_learn_role_entry *special_role_list;
 
 extern FILE *learn_pass1in;
 extern FILE *learn_pass2in;
@@ -12,7 +12,7 @@ extern int learn_pass2parse(void);
 
 void learn_pass1(FILE *stream)
 {
-	struct gr_learn_role_entry **tmp;
+	struct gr_learn_role_entry *tmp;
 	struct gr_learn_file_tmp_node **tmptable;
 	unsigned long i;
 	u_int32_t table_size;
@@ -38,64 +38,58 @@ void learn_pass1(FILE *stream)
 			reduce_ip_tree(default_role_entry->allowed_ips);
 	}
 
-	tmp = group_role_list;
-	while (tmp && *tmp) {
-		if ((*tmp)->hash) {
-			tmptable = (struct gr_learn_file_tmp_node **)(*tmp)->hash->table;
-			table_size = (*tmp)->hash->table_size;
-			sort_file_list((*tmp)->hash);
+	for_each_list_entry(tmp, group_role_list) {
+		if (tmp->hash) {
+			tmptable = (struct gr_learn_file_tmp_node **)tmp->hash->table;
+			table_size = tmp->hash->table_size;
+			sort_file_list(tmp->hash);
 			for (i = 0; i < table_size; i++) {
 				if (tmptable[i] == NULL)
 					continue;
-				if ((*tmp)->rolemode & GR_ROLE_LEARN)
-					insert_file(&((*tmp)->subject_list), tmptable[i]->filename, tmptable[i]->mode, 1);
+				if (tmp->rolemode & GR_ROLE_LEARN)
+					insert_file(&(tmp->subject_list), tmptable[i]->filename, tmptable[i]->mode, 1);
 				else
-					insert_file(&((*tmp)->subject_list), tmptable[i]->filename, tmptable[i]->mode, 2);
+					insert_file(&(tmp->subject_list), tmptable[i]->filename, tmptable[i]->mode, 2);
 			}
 		}
-		if ((*tmp)->rolemode & GR_ROLE_LEARN)
-			reduce_ip_tree((*tmp)->allowed_ips);
-		tmp++;
+		if (tmp->rolemode & GR_ROLE_LEARN)
+			reduce_ip_tree(tmp->allowed_ips);
 	}
 
-	tmp = user_role_list;
-	while (tmp && *tmp) {
-		if ((*tmp)->hash) {
-			tmptable = (struct gr_learn_file_tmp_node **)(*tmp)->hash->table;
-			table_size = (*tmp)->hash->table_size;
-			sort_file_list((*tmp)->hash);
+	for_each_list_entry(tmp, user_role_list) {
+		if (tmp->hash) {
+			tmptable = (struct gr_learn_file_tmp_node **)tmp->hash->table;
+			table_size = tmp->hash->table_size;
+			sort_file_list(tmp->hash);
 			for (i = 0; i < table_size; i++) {
 				if (tmptable[i] == NULL)
 					continue;
-				if ((*tmp)->rolemode & GR_ROLE_LEARN)
-					insert_file(&((*tmp)->subject_list), tmptable[i]->filename, tmptable[i]->mode, 1);
+				if (tmp->rolemode & GR_ROLE_LEARN)
+					insert_file(&(tmp->subject_list), tmptable[i]->filename, tmptable[i]->mode, 1);
 				else
-					insert_file(&((*tmp)->subject_list), tmptable[i]->filename, tmptable[i]->mode, 2);
+					insert_file(&(tmp->subject_list), tmptable[i]->filename, tmptable[i]->mode, 2);
 			}
 		}
-		if ((*tmp)->rolemode & GR_ROLE_LEARN)
-			reduce_ip_tree((*tmp)->allowed_ips);
-		tmp++;
+		if (tmp->rolemode & GR_ROLE_LEARN)
+			reduce_ip_tree(tmp->allowed_ips);
 	}
 
-	tmp = special_role_list;
-	while (tmp && *tmp) {
-		if ((*tmp)->hash) {
-			tmptable = (struct gr_learn_file_tmp_node **)(*tmp)->hash->table;
-			table_size = (*tmp)->hash->table_size;
-			sort_file_list((*tmp)->hash);
+	for_each_list_entry(tmp, special_role_list) {
+		if (tmp->hash) {
+			tmptable = (struct gr_learn_file_tmp_node **)tmp->hash->table;
+			table_size = tmp->hash->table_size;
+			sort_file_list(tmp->hash);
 			for (i = 0; i < table_size; i++) {
 				if (tmptable[i] == NULL)
 					continue;
-				if ((*tmp)->rolemode & GR_ROLE_LEARN)
-					insert_file(&((*tmp)->subject_list), tmptable[i]->filename, tmptable[i]->mode, 1);
+				if (tmp->rolemode & GR_ROLE_LEARN)
+					insert_file(&(tmp->subject_list), tmptable[i]->filename, tmptable[i]->mode, 1);
 				else
-					insert_file(&((*tmp)->subject_list), tmptable[i]->filename, tmptable[i]->mode, 2);
+					insert_file(&(tmp->subject_list), tmptable[i]->filename, tmptable[i]->mode, 2);
 			}
 		}
-		if ((*tmp)->rolemode & GR_ROLE_LEARN)
-			reduce_ip_tree((*tmp)->allowed_ips);
-		tmp++;
+		if (tmp->rolemode & GR_ROLE_LEARN)
+			reduce_ip_tree(tmp->allowed_ips);
 	}
 
 	return;
@@ -190,7 +184,7 @@ void merge_acl_rules(void)
 
 void learn_pass2(FILE *stream)
 {
-	struct gr_learn_role_entry **tmp;
+	struct gr_learn_role_entry *tmp;
 	struct gr_learn_file_node *subjects;
 	
 	learn_pass2in = stream;
@@ -205,31 +199,25 @@ void learn_pass2(FILE *stream)
 		traverse_file_tree(subjects, &ensure_subject_security, NULL, NULL);
 	}
 
-	tmp = group_role_list;
-	while (tmp && *tmp) {
-		subjects = (*tmp)->subject_list;
+	for_each_list_entry(tmp, group_role_list) {
+		subjects = tmp->subject_list;
 		traverse_file_tree(subjects, &full_reduce_object_node, NULL, NULL);
 		traverse_file_tree(subjects, &full_reduce_ip_node, NULL, NULL);
 		traverse_file_tree(subjects, &ensure_subject_security, NULL, NULL);
-		tmp++;
 	}
 
-	tmp = user_role_list;
-	while (tmp && *tmp) {
-		subjects = (*tmp)->subject_list;
+	for_each_list_entry(tmp, user_role_list) {
+		subjects = tmp->subject_list;
 		traverse_file_tree(subjects, &full_reduce_object_node, NULL, NULL);
 		traverse_file_tree(subjects, &full_reduce_ip_node, NULL, NULL);
 		traverse_file_tree(subjects, &ensure_subject_security, NULL, NULL);
-		tmp++;
 	}
 
-	tmp = special_role_list;
-	while (tmp && *tmp) {
-		subjects = (*tmp)->subject_list;
+	for_each_list_entry(tmp, special_role_list) {
+		subjects = tmp->subject_list;
 		traverse_file_tree(subjects, &full_reduce_object_node, NULL, NULL);
 		traverse_file_tree(subjects, &full_reduce_ip_node, NULL, NULL);
 		traverse_file_tree(subjects, &ensure_subject_security, NULL, NULL);
-		tmp++;
 	}
 
 	return;
@@ -249,7 +237,7 @@ perform_parse_and_reduce(FILE *learnlog)
 
 void display_learn_logs(FILE *stream)
 {
-	struct gr_learn_role_entry **tmp;
+	struct gr_learn_role_entry *tmp;
 	struct gr_learn_file_node *subjects;
 	struct gr_learn_ip_node *allowed_ips;
 	char rolemode[17];
@@ -263,67 +251,69 @@ void display_learn_logs(FILE *stream)
 		allowed_ips = default_role_entry->allowed_ips;
 		if (allowed_ips && !(grlearn_options & GR_DONT_LEARN_ALLOWED_IPS))
 			traverse_ip_tree(allowed_ips, NULL, &display_only_ip, 0, stream);
-		if (subjects)
+		if (subjects) {
+			sort_file_node_list(default_role_entry->subject_list);
 			display_tree(subjects, stream);
+		}
 
 		fprintf(stream, "\n");
 	}
 
-	tmp = group_role_list;
-	while (tmp && *tmp) {
-		if (!((*tmp)->rolemode & GR_ROLE_LEARN))
-			fprintf(stream, "###  THE BELOW SUBJECT(S) SHOULD BE ADDED TO THE GROUP ROLE \"%s\" ###\n", (*tmp)->rolename);
+	for_each_list_entry(tmp, group_role_list) {
+		if (!(tmp->rolemode & GR_ROLE_LEARN))
+			fprintf(stream, "###  THE BELOW SUBJECT(S) SHOULD BE ADDED TO THE GROUP ROLE \"%s\" ###\n", tmp->rolename);
 		else {
-			conv_role_mode_to_str((*tmp)->rolemode, rolemode, sizeof(rolemode));
-			fprintf(stream, "role %s %s\n", (*tmp)->rolename, rolemode);
+			conv_role_mode_to_str(tmp->rolemode, rolemode, sizeof(rolemode));
+			fprintf(stream, "role %s %s\n", tmp->rolename, rolemode);
 		}
-		subjects = (*tmp)->subject_list;
-		allowed_ips = (*tmp)->allowed_ips;
+		subjects = tmp->subject_list;
+		allowed_ips = tmp->allowed_ips;
 		if (allowed_ips && !(grlearn_options & GR_DONT_LEARN_ALLOWED_IPS))
 			traverse_ip_tree(allowed_ips, NULL, &display_only_ip, 0, stream);
-		if (subjects)
+		if (subjects) {
+			sort_file_node_list(group_role_list->subject_list);
 			display_tree(subjects, stream);
+		}
 
 		fprintf(stream, "\n");
-		tmp++;
 	}
 
-	tmp = user_role_list;
-	while (tmp && *tmp) {
-		if (!((*tmp)->rolemode & GR_ROLE_LEARN))
-			fprintf(stream, "###  THE BELOW SUBJECT(S) SHOULD BE ADDED TO THE USER ROLE \"%s\" ###\n", (*tmp)->rolename);
+	for_each_list_entry(tmp, user_role_list) {
+		if (!(tmp->rolemode & GR_ROLE_LEARN))
+			fprintf(stream, "###  THE BELOW SUBJECT(S) SHOULD BE ADDED TO THE USER ROLE \"%s\" ###\n", tmp->rolename);
 		else {
-			conv_role_mode_to_str((*tmp)->rolemode, rolemode, sizeof(rolemode));
-			fprintf(stream, "role %s %s\n", (*tmp)->rolename, rolemode);
+			conv_role_mode_to_str(tmp->rolemode, rolemode, sizeof(rolemode));
+			fprintf(stream, "role %s %s\n", tmp->rolename, rolemode);
 		}
-		subjects = (*tmp)->subject_list;
-		allowed_ips = (*tmp)->allowed_ips;
+		subjects = tmp->subject_list;
+		allowed_ips = tmp->allowed_ips;
 		if (allowed_ips && !(grlearn_options & GR_DONT_LEARN_ALLOWED_IPS))
 			traverse_ip_tree(allowed_ips, NULL, &display_only_ip, 0, stream);
-		if (subjects)
+		if (subjects) {
+			sort_file_node_list(user_role_list->subject_list);
 			display_tree(subjects, stream);
+		}
 
 		fprintf(stream, "\n");
-		tmp++;
 	}
 
-	tmp = special_role_list;
-	while (tmp && *tmp) {
-		if (!((*tmp)->rolemode & GR_ROLE_LEARN))
-			fprintf(stream, "###  THE BELOW SUBJECT(S) SHOULD BE ADDED TO THE SPECIAL ROLE \"%s\" ###\n", (*tmp)->rolename);
+	for_each_list_entry(tmp, special_role_list) {
+		if (!(tmp->rolemode & GR_ROLE_LEARN))
+			fprintf(stream, "###  THE BELOW SUBJECT(S) SHOULD BE ADDED TO THE SPECIAL ROLE \"%s\" ###\n", tmp->rolename);
 		else {
-			conv_role_mode_to_str((*tmp)->rolemode, rolemode, sizeof(rolemode));
-			fprintf(stream, "role %s %s\n", (*tmp)->rolename, rolemode);
+			conv_role_mode_to_str(tmp->rolemode, rolemode, sizeof(rolemode));
+			fprintf(stream, "role %s %s\n", tmp->rolename, rolemode);
 		}
-		subjects = (*tmp)->subject_list;
-		allowed_ips = (*tmp)->allowed_ips;
+		subjects = tmp->subject_list;
+		allowed_ips = tmp->allowed_ips;
 		if (allowed_ips && !(grlearn_options & GR_DONT_LEARN_ALLOWED_IPS))
 			traverse_ip_tree(allowed_ips, NULL, &display_only_ip, 0, stream);
-		if (subjects)
+		if (subjects) {
+			sort_file_node_list(special_role_list->subject_list);
 			display_tree(subjects, stream);
+		}
 
 		fprintf(stream, "\n");
-		tmp++;
 	}
 
 	return;

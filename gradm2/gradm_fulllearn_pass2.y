@@ -2,7 +2,7 @@
 #include "gradm.h"
 extern int fulllearn_pass2lex(void);
 
-extern struct gr_learn_group_node **role_list;
+extern struct gr_learn_group_node *the_role_list;
 %}
 
 %union {
@@ -59,7 +59,7 @@ learn_log:
 
 			addr = $21;
 
-			match_role(role_list, uid, gid, &group, &user);
+			match_role(the_role_list, uid, gid, &group, &user);
 	
 			if (user)
 				insert_ip(&(user->allowed_ips), addr, 0, 0, 0);
@@ -95,7 +95,7 @@ learn_log:
 
 			addr = $23;
 
-			match_role(role_list, uid, gid, &group, &user);
+			match_role(the_role_list, uid, gid, &group, &user);
 
 			if (user) {
 				insert_ip(&(user->allowed_ips), addr, 0, 0, 0);

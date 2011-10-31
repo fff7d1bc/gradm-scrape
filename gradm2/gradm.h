@@ -19,6 +19,7 @@
 #include <fnmatch.h>
 #include <elf.h>
 #include <limits.h>
+#include <assert.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <sys/poll.h>
@@ -58,6 +59,32 @@
 #define for_each_globbed(x, y) \
 	for(x = (y)->globbed; x; x = (x)->next)
 
+#define for_each_leaf(x, y) \
+	for (x = (y)->leaves; x; x = (x)->next)
+
+#define for_each_list_entry(x, y) \
+	for (x = (y); x; x = (x)->next)
+
+#define for_each_removable_list_entry(x, y) \
+	for (x = (y); x;)
+
+#define for_each_removable_list_entry_end(x) 	\
+		if (removed)			\
+			removed = 0;		\
+		else				\
+			x = (x)->next;		
+
+#define for_each_parent_entry(x, y) \
+	for (x = (y); x; x = (x)->parent)
+
+#define establish_new_head(list, head, tmp)	\
+	do {					\
+		(tmp) = (list);			\
+		(head)->next = (tmp);		\
+		if ((tmp))			\
+			(tmp)->prev = (head);	\
+		(list) = (head);		\
+	} while (0);
 
 #define MAJOR_26(dev)     ((unsigned int) ((dev)>>20))
 #define MINOR_26(dev)     ((unsigned int) ((dev) & ((1U << 20) - 1)))
