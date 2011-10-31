@@ -109,6 +109,7 @@ high-protected-path /proc/sys
 high-protected-path /proc/bus
 high-protected-path /proc/slabinfo
 high-protected-path /proc/modules
+high-protected-path /proc/kallsyms
 high-protected-path /etc/passwd
 high-protected-path /etc/shadow
 high-protected-path /var/backups
