@@ -345,7 +345,16 @@ object_connect_ip_label:	CONNECT invert_socket IPADDR ip_netmask ip_ports ip_typ
 				}
 	;
 
-object_sock_allow_family:	SOCKALLOWFAMILY SOCKFAMILY
+object_sock_allow_family:	SOCKALLOWFAMILY sock_families
+				{
+				}
+	;
+
+sock_families:			SOCKFAMILY
+				{
+				 add_sock_family(current_subject, $1);
+				}
+	|			sock_families SOCKFAMILY
 				{
 				 add_sock_family(current_subject, $2);
 				}
