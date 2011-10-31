@@ -793,6 +793,9 @@ role_mode_conv(const char *mode)
 		case 'A':
 			retmode |= GR_ROLE_GOD;
 			break;
+		case 'R':
+			retmode |= GR_ROLE_PERSIST;
+			break;
 		case 'T':
 			retmode |= GR_ROLE_TPE;
 			break;
@@ -806,6 +809,13 @@ role_mode_conv(const char *mode)
 				"of %s\n", mode[len], lineno, current_acl_file);
 			exit(EXIT_FAILURE);
 		}
+	}
+
+	if (retmode & (GR_ROLE_SPECIAL | GR_ROLE_PERSIST) == GR_ROLE_PERSIST) {
+		fprintf(stderr, "Error on line %lu of %s.  Persistent "
+			"roles are only valid in the context of special roles.\n"
+			"The RBAC system will not load until this error is fixed.\n", lineno, current_acl_file);
+		exit(EXIT_FAILURE);
 	}
 
 	if ((retmode & (GR_ROLE_NOPW | GR_ROLE_PAM)) == (GR_ROLE_NOPW | GR_ROLE_PAM)) {
@@ -990,6 +1000,18 @@ proc_object_mode_conv(const char *mode)
 			break;
 		case 's':
 			retmode |= GR_SUPPRESS;
+			break;
+		case 'f':
+			if (!(current_role->roletype & GR_ROLE_PERSIST)) {
+				fprintf(stderr, "Error on line %lu of "
+				"%s.  The 'f' mode is only permitted "
+				"within persistent special roles.\n"
+				"The RBAC system will not be allowed to "
+				"be enabled until this error is corrected.\n",
+				lineno, current_acl_file);
+				exit(EXIT_FAILURE);
+			}
+			retmode |= GR_INIT_TRANSFER;
 			break;
 		case 'm':
 			retmode |= GR_SETID;

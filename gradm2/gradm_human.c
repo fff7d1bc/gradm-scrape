@@ -12,6 +12,7 @@ static struct role_name_table {
 	GR_ROLE_NOPW, 'N'}, {
 	GR_ROLE_GOD, 'A'}, {
 	GR_ROLE_TPE, 'T'}, {
+	GR_ROLE_PERSIST, 'R'}, {
 	GR_ROLE_PAM, 'P'}
 };
 
@@ -42,6 +43,7 @@ static struct mode_name_table {
 	GR_AUDIT_LINK, 'L'}, {
 	GR_SUPPRESS, 's'}, {
 	GR_NOPTRACE, 'p'}, {
+	GR_INIT_TRANSFER, 'f'}, {
 	GR_FIND, 'h'}
 };
 

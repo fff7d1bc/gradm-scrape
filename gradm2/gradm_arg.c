@@ -398,6 +398,8 @@ parse_args(int argc, char *argv[])
 			break;
 		}
 	}
+	if (optind < argc)
+		show_help();
 
 	if (gr_check) {
 		if (verbose)

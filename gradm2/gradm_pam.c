@@ -30,8 +30,9 @@ int gradm_pam_conv(int num_msg, const struct pam_message **msg, struct pam_respo
 			response[i].resp = calloc(1, PAM_MAX_RESP_SIZE);
 			if (response[i].resp == NULL)
 				failure("calloc");
-			fgets(response[i].resp, PAM_MAX_RESP_SIZE, stdin);
-			p = response[i].resp;
+			p = NULL;
+			while (p == NULL)
+				p = fgets(response[i].resp, PAM_MAX_RESP_SIZE, stdin);
 			while (*p) {
 				if (*p == '\n')
 					*p = '\0';

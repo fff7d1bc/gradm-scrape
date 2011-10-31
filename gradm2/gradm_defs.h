@@ -14,8 +14,8 @@
 #define GR_LEARN_PIPE_PATH	GRSEC_DIR "/.grlearn.pipe"
 #define GR_LEARN_PID_PATH	GRSEC_DIR "/.grlearn.pid"
 
-#define GR_VERSION		"2.2.1"
-#define GRADM_VERSION		0x2201
+#define GR_VERSION		"2.2.2"
+#define GRADM_VERSION		0x2202
 
 #define GR_PWONLY		0
 #define GR_PWANDSUM		1
@@ -38,6 +38,9 @@
 #undef PATH_MAX
 #define PATH_MAX 		4096
 #define MAX_LINE_LEN 		5000
+
+// CAP_SYSLOG
+#define CAP_MAX			34 
 
 #define MAX_INCLUDE_DEPTH	20
 #define MAX_NEST_DEPTH		8
@@ -177,7 +180,9 @@ enum {
 	GR_AUDIT_LINK	= 0x00080000,
 	GR_PTRACERD 	= 0x00100000,
 	GR_NOPTRACE	= 0x00200000,
-	GR_SUPPRESS 	= 0x00400000
+	GR_SUPPRESS 	= 0x00400000,
+	GR_NOLEARN	= 0x00800000,
+	GR_INIT_TRANSFER= 0x01000000
 };
 
 enum {
@@ -192,6 +197,7 @@ enum {
 	GR_ROLE_TPE 	= 0x0100,
 	GR_ROLE_DOMAIN 	= 0x0200,
 	GR_ROLE_PAM 	= 0x0400,
+	GR_ROLE_PERSIST = 0x0800
 };
 
 enum {
@@ -530,7 +536,7 @@ struct gr_arg_wrapper {
 };
 
 extern char *rlim_table[GR_NLIMITS];
-extern struct capability_set capability_list[35];
+extern struct capability_set capability_list[CAP_MAX+2];
 extern struct paxflag_set paxflag_list[5];
 extern struct family_set sock_families[AF_MAX+2];
 

@@ -16,6 +16,20 @@
 # T -> Enable TPE for this role
 # l -> Enable learning for this role
 # P -> Use PAM authentication for this role.
+# R -> Enable persistence of special role.  Normal special roles will
+#      be removed upon exit of the process that entered the role, or
+#      upon unauth (this is what changes the apache process' role back 
+#      to its normal role after being restarted from the admin role, for
+#      instance).  Role persistence allows a special role to be used for
+#      system shutdown, as the point at which the admin's shell/SSH 
+#      session is terminated won't cause the rest of the shutdown 
+#      sequence to execute with reduced privilege.  Do *NOT* use this 
+#      flag with any role that does anything but shut the system down.
+#      This role will also be transferred to the init process upon
+#      writing to /dev/initctl.  This allows init to execute the rc 
+#      scripts for shutdown with the necessary privilege.
+#      For usability reasons, we allow the removal of persistence through
+#      the normal unauth process (so persistence only survives exit).
 #
 # a role can only be one of user, group, or special
 #
@@ -72,6 +86,11 @@
 #	(hardlinking requires at a minimum c and l modes, and the target
 #	 link cannot have any greater permission than the source file)
 # L -> audit link creation
+# f -> needed to mark the pipe used for communication with init
+#      to transfer the privilege of the persistent role; only valid
+#      within a persistent role.  Transfer only occurs when the file is 
+#      opened for writing
+#
 # new subject modes:
 # O -> disable "writable library" restrictions for this task
 # t -> allow this process to ptrace any process (use with caution)
@@ -220,17 +239,44 @@ define grsec_denied {
 	/proc/kallsyms	h
 	# hide and suppress logs about accessing this path
 	/lib/modules	hs
+	/etc/ssh	h
 }
 # usage:
 # $grsec_denied
 
+role shutdown sARG
+subject / rvka
+	/
+	/dev
+	/dev/urandom	r
+	/dev/random	r
+	/etc		r
+	/bin		rx
+	/sbin		rx
+	/lib		rx
+	/lib64		rx
+	/usr		rx
+	/proc r
+	$grsec_denied
+	-CAP_ALL
+	connect disabled
+	bind disabled
+
+subject /sbin/init rvkao
+	/ rwcdmlxi
+subject /sbin/halt rvkao
+	/ rwcdmlxi
+	/dev/initctl rwf
+subject /sbin/shutdown rvkao
+	/ rwcdmlxi
+	/dev/initctl rwf
 
 role admin sA
 subject / rvka
 	/ rwcdmlxi
 
 role default G
-role_transitions admin
+role_transitions admin shutdown
 subject /
 	/		r
 	/opt		rx
@@ -263,6 +309,7 @@ subject /
 	/etc		rx
 	/proc		rwx
 	/proc/sys	r
+	/sys		h
 	/root		r
 	/tmp		rwcd
 	/var		rwxcd
@@ -270,8 +317,6 @@ subject /
 	/var/log	r
 # hide the kernel images and modules
 	$grsec_denied
-
-	/etc/ssh	h
 
 # if sshd needs to be restarted, it can be done through the admin role
 # restarting sshd should be followed immediately by a gradm -u
