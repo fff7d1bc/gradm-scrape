@@ -240,6 +240,7 @@ define grsec_denied {
 	/proc/kallsyms	h
 	# hide and suppress logs about accessing this path
 	/lib/modules	hs
+	/lib64/modules	hs
 	/etc/ssh	h
 }
 # usage:

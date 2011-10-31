@@ -85,6 +85,7 @@ high-reduce-path /lib/tls
 high-reduce-path /lib64/tls
 high-reduce-path /lib/security
 high-reduce-path /lib/modules
+high-reduce-path /lib64/modules
 high-reduce-path /usr/lib
 high-reduce-path /usr/lib64
 high-reduce-path /usr/lib/tls
@@ -127,6 +128,7 @@ read-protected-path /proc/kcore
 read-protected-path /proc/slabinfo
 read-protected-path /proc/modules
 read-protected-path /lib/modules
+read-protected-path /lib64/modules
 read-protected-path /boot
 read-protected-path /etc/shadow
 read-protected-path /etc/shadow-
@@ -158,6 +160,7 @@ high-protected-path /etc/samba/smbpasswd
 #to protect kernel images
 high-protected-path /boot
 high-protected-path /lib/modules
+high-protected-path /lib64/modules
 high-protected-path /usr/src
 
 inherit-learn /etc/cron.d

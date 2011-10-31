@@ -587,6 +587,14 @@ analyze_acls(void)
 			errs_found++;
 		}
 
+		if (!stat("/lib64/modules", &fstat) && !check_permission(role, def_acl, "/lib64/modules", &chk)) {
+			fprintf(stderr,
+				"Writing access is allowed by role %s to /lib64/modules, the directory which "
+				"holds kernel modules.\n\n",
+				role->rolename);
+			errs_found++;
+		}
+
 		if (!check_permission(role, def_acl, "/dev", &chk)) {
 			fprintf(stderr,
 				"Writing access is allowed by role %s to /dev, the directory which "
@@ -726,6 +734,18 @@ analyze_acls(void)
 			fprintf(stderr,
 				"Reading access is allowed by role %s to "
 				"/lib/modules, the directory which holds kernel "
+				"kernel modules.  The ability to read these "
+				"images provides an attacker with very "
+				"useful information for launching \"ret-to-libc\" "
+				"style attacks against the kernel"
+				".\n\n", role->rolename);
+			errs_found++;
+		}
+
+		if (!stat("/lib64/modules", &fstat) && !check_permission(role, def_acl, "/lib64/modules", &chk)) {
+			fprintf(stderr,
+				"Reading access is allowed by role %s to "
+				"/lib64/modules, the directory which holds kernel "
 				"kernel modules.  The ability to read these "
 				"images provides an attacker with very "
 				"useful information for launching \"ret-to-libc\" "

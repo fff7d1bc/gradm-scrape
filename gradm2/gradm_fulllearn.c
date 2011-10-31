@@ -454,6 +454,7 @@ static char *initial_roles_str =
 "\t/proc/modules\th\n"
 "\t/proc/kallsyms\th\n"
 "\t/lib/modules\ths\n"
+"\t/lib64/modules\ths\n"
 "\t/etc/ssh\th\n"
 "}\n\n"
 "role admin sA\n"
